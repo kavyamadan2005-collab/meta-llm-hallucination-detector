@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+streamlit
+python-dotenv
+pydantic
+SQLAlchemy
+pytest
+httpx
+spacy
+networkx
+numpy
+faiss-cpu
+sentence-transformers

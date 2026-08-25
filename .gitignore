@@ -1,0 +1,134 @@
+# ============================================================
+# Meta-LLM Hallucination Detection - .gitignore
+# ============================================================
+
+# -------------------------
+# Environment & Secrets
+# -------------------------
+.env
+.env.*
+!.env.example
+
+# -------------------------
+# Python Virtual Environments
+# -------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# -------------------------
+# Python Generated Files
+# -------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+
+# -------------------------
+# Testing / Coverage
+# -------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# -------------------------
+# Local Database Files
+# -------------------------
+*.db
+*.sqlite
+*.sqlite3
+
+# Keep database source code
+# database/*.py will remain tracked
+
+# -------------------------
+# Retrieval / Vector Indexes
+# -------------------------
+data/index/
+.faiss/
+*.faiss
+*.index
+
+# -------------------------
+# ML Models & Caches
+# -------------------------
+models/
+model_cache/
+.cache/
+.huggingface/
+.transformers_cache/
+
+# -------------------------
+# Generated / Temporary Data
+# -------------------------
+data/generated/
+*.tmp
+*.temp
+
+# -------------------------
+# Python Logs
+# -------------------------
+*.log
+
+# -------------------------
+# VS Code / IDE
+# -------------------------
+.vscode/
+.idea/
+
+# -------------------------
+# Operating System Files
+# -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# -------------------------
+# Node / Frontend Generated Files
+# -------------------------
+node_modules/
+.next/
+dist/
+build/
+frontend/node_modules/
+frontend/.next/
+
+# -------------------------
+# Frontend Environment Files
+# -------------------------
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.production.local
+
+# -------------------------
+# Jupyter Notebook
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# Temporary / Backup Files
+# -------------------------
+*.bak
+*.swp
+*.swo
+*~
+# TypeScript build cache
+*.tsbuildinfo
+
+# ============================================================
+# IMPORTANT
+#
+# data/documents/ is intentionally NOT ignored.
+# Source documents used by the project should be committed.
+#
+# data/index/ IS ignored because FAISS indexes are generated
+# from the source documents.
+#
+# .env is ignored because it may contain API keys.
+# .env.example should be committed.
+# ============================================================

@@ -1,0 +1,11 @@
+"""Logging setup for the application."""
+
+import logging
+
+
+def configure_logging(level: str) -> None:
+    """Configure consistent console logging for application modules."""
+    logging.basicConfig(
+        level=getattr(logging, level.upper(), logging.INFO),
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    )
