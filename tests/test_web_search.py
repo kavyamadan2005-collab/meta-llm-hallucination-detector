@@ -29,6 +29,21 @@ def test_development_web_provider_returns_marked_result() -> None:
     assert results[0].text.startswith("[Development web data]")
 
 
+def test_development_web_provider_returns_enriched_chandrayaan_evidence() -> None:
+    results = DevelopmentWebSearchProvider().search("Chandrayaan-3 mission", 5)
+
+    assert len(results) == 1
+    result = results[0]
+    assert result.title == "[Development web data] Chandrayaan-3"
+    assert result.url == "https://development.invalid/chandrayaan-3"
+    assert "[Development web data]" in result.text
+    assert "August 23, 2023" in result.text
+    assert "Vikram lander" in result.text
+    assert "Pragyan rover" in result.text
+    assert "lunar surface" in result.text
+    assert "scientific data" in result.text
+
+
 def test_web_search_retriever_converts_and_scores_evidence() -> None:
     provider = Mock()
     provider.search.return_value = [WebSearchResult(

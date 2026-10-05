@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { TriangleAlert } from 'lucide-react'
+import { AlertTriangle, BookOpen, FlaskConical, RotateCcw, ShieldCheck } from 'lucide-react'
 import { analyzeQuestion, type AnalyzeResponse } from '@/lib/api'
 import { AnalysisProgress } from '@/components/analysis-progress'
 import { BackendStatus } from '@/components/backend-status'
@@ -20,15 +20,12 @@ export default function HomePage() {
     controllerRef.current?.abort()
     const controller = new AbortController()
     controllerRef.current = controller
-
     setSubmitted(value)
     setLoading(true)
     setError(null)
     setData(null)
-
     try {
-      const result = await analyzeQuestion(value, controller.signal)
-      setData(result)
+      setData(await analyzeQuestion(value, controller.signal))
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') return
       setError((err as Error).message || 'Analysis failed.')
@@ -47,87 +44,32 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative min-h-dvh overflow-hidden">
-      <div
-        className="grid-backdrop pointer-events-none absolute inset-x-0 top-0 h-[520px] opacity-60 [mask-image:radial-gradient(70%_60%_at_50%_0%,black,transparent)]"
-        aria-hidden="true"
-      />
-
-      <header className="relative z-10 mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-6">
-        <div className="flex items-center gap-3">
-          <span
-            className="flex size-8 items-center justify-center rounded-md border border-primary/40 bg-primary/10 font-mono text-sm font-semibold text-primary"
-            aria-hidden="true"
-          >
-            M
-          </span>
-          <div className="leading-tight">
-            <p className="font-mono text-sm font-semibold tracking-[0.28em]">META</p>
-            <p className="text-[11px] text-muted-foreground">Hallucination Detection</p>
+    <div className="min-h-dvh">
+      <header className="border-b border-border bg-card/90">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm"><ShieldCheck className="size-5" /></div>
+            <div><p className="text-sm font-bold tracking-tight">Meta-LLM Hallucination Detection</p><p className="text-xs text-muted-foreground">Explainable claim-level verification for LLM responses</p></div>
           </div>
+          <div className="flex items-center gap-3"><span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex"><BookOpen className="size-3.5" /> Research dashboard</span><BackendStatus /></div>
         </div>
-        <BackendStatus />
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-24">
-        {!data && !loading && (
-          <section className="pt-10 sm:pt-20">
-            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-primary">
-              Claim-level verification engine
-            </p>
-            <h1 className="mt-5 text-balance text-4xl font-medium leading-[1.05] tracking-tight sm:text-6xl">
-              Verify AI answers,
-              <br />
-              <span className="text-muted-foreground">claim by claim.</span>
-            </h1>
-            <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">
-              Meta generates an answer with your local model, decomposes it into atomic claims,
-              retrieves evidence for each one, and returns a verdict with confidence and sources.
-            </p>
-
-            <div className="mt-10">
-              <QuestionForm
-                question={question}
-                onQuestionChange={setQuestion}
-                onSubmit={runAnalysis}
-                loading={loading}
-              />
-            </div>
-          </section>
-        )}
-
-        {loading && (
-          <div className="pt-10">
-            <AnalysisProgress question={submitted} />
-          </div>
-        )}
-
-        {error && !loading && (
-          <div
-            role="alert"
-            className="animate-rise mt-8 flex items-start gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 p-5"
-          >
-            <TriangleAlert className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden="true" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium">Analysis failed</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{error}</p>
-            </div>
-          </div>
-        )}
-
-        {data && !loading && (
-          <div className="pt-10">
-            <ResultsView data={data} onReset={reset} />
-          </div>
-        )}
-      </main>
-
-      <footer className="relative z-10 border-t border-border">
-        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-6 font-mono text-[11px] text-muted-foreground/70">
-          <span>META · LLM Hallucination Detection System</span>
-          <span>FastAPI · Local Analysis Pipeline</span>
+      <main className="relative mx-auto max-w-7xl px-5 pb-16 pt-8 lg:px-8">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-40 [mask-image:linear-gradient(to_bottom,black,transparent)]"><div className="grid-backdrop h-full" /></div>
+        <div className="relative">
+          {!data && !loading && (
+            <section className="grid items-center gap-10 py-8 lg:grid-cols-[1fr_0.78fr] lg:py-14">
+              <div><div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary"><FlaskConical className="size-3.5" /> AI reliability workspace</div><h1 className="mt-5 max-w-2xl text-4xl font-bold leading-[1.08] tracking-tight text-balance sm:text-6xl">See what an AI answer is really made of.</h1><p className="mt-5 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">Ask a question and follow the complete path from generated response to extracted claims, retrieved evidence, and transparent verdicts.</p><div className="mt-7 flex flex-wrap gap-3 text-xs font-medium text-muted-foreground"><span className="rounded-lg border border-border bg-card px-3 py-2">Claim-level analysis</span><span className="rounded-lg border border-border bg-card px-3 py-2">Evidence provenance</span><span className="rounded-lg border border-border bg-card px-3 py-2">Local or web-backed</span></div></div>
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-lg shadow-primary/5 sm:p-6"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Start an analysis</p><h2 className="mt-2 text-xl font-semibold">Analyze an LLM response</h2><p className="mt-2 text-sm leading-relaxed text-muted-foreground">The backend will generate an answer and verify its factual claims.</p><div className="mt-5"><QuestionForm question={question} onQuestionChange={setQuestion} onSubmit={runAnalysis} loading={loading} /></div></section>
+            </section>
+          )}
+          {loading && <div className="mx-auto max-w-5xl py-10"><AnalysisProgress question={submitted} /></div>}
+          {error && !loading && <div role="alert" className="mx-auto mt-8 flex max-w-3xl items-start gap-3 rounded-2xl border border-contradicted/25 bg-contradicted/5 p-5 text-sm"><AlertTriangle className="mt-0.5 size-5 shrink-0 text-contradicted" /><div><p className="font-semibold">Analysis could not be completed</p><p className="mt-1 leading-relaxed text-muted-foreground">{error}</p><button type="button" onClick={() => runAnalysis(submitted)} className="mt-3 inline-flex items-center gap-2 font-semibold text-primary hover:underline"><RotateCcw className="size-3.5" /> Try again</button></div></div>}
+          {data && !loading && <div className="pt-2"><ResultsView data={data} onReset={reset} /></div>}
         </div>
-      </footer>
+      </main>
+      <footer className="border-t border-border bg-card"><div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-5 py-5 text-xs text-muted-foreground lg:px-8"><span>Meta · Explainable hallucination detection</span><span>FastAPI analysis pipeline</span></div></footer>
     </div>
   )
 }

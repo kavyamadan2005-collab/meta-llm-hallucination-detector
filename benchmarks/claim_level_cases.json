@@ -1,0 +1,877 @@
+[
+  {
+    "case_id": "SUP-01",
+    "category": "direct_support",
+    "claim": "Water freezes at 0 degrees Celsius.",
+    "evidence": "Water freezes at 0 degrees Celsius.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-02",
+    "category": "direct_support",
+    "claim": "The Earth orbits the Sun.",
+    "evidence": "The Earth orbits the Sun.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-03",
+    "category": "direct_support",
+    "claim": "A triangle has three sides.",
+    "evidence": "A triangle has three sides.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-04",
+    "category": "direct_support",
+    "claim": "The Pacific Ocean is larger than the Atlantic Ocean.",
+    "evidence": "The Pacific Ocean is larger than the Atlantic Ocean.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-05",
+    "category": "direct_support",
+    "claim": "Python was created by Guido van Rossum.",
+    "evidence": "Python was created by Guido van Rossum.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "Python",
+        "label": "PRODUCT"
+      },
+      {
+        "text": "Guido van Rossum",
+        "label": "PERSON"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-06",
+    "category": "direct_support",
+    "claim": "The Nile flows through Egypt.",
+    "evidence": "The Nile flows through Egypt.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "Nile",
+        "label": "LOC"
+      },
+      {
+        "text": "Egypt",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-07",
+    "category": "direct_support",
+    "claim": "Photosynthesis uses light energy.",
+    "evidence": "Photosynthesis uses light energy.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-08",
+    "category": "direct_support",
+    "claim": "The committee approved the proposal.",
+    "evidence": "The committee approved the proposal.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-09",
+    "category": "direct_support",
+    "claim": "Mars has two moons.",
+    "evidence": "Mars has two moons.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "Mars",
+        "label": "LOC"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "SUP-10",
+    "category": "direct_support",
+    "claim": "The device weighs 2 kilograms.",
+    "evidence": "The device weighs 2 kilograms.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-01",
+    "category": "paraphrase",
+    "claim": "The company purchased the startup.",
+    "evidence": "The firm acquired the young company.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-02",
+    "category": "paraphrase",
+    "claim": "The scientist discovered the particle.",
+    "evidence": "The researcher found the particle.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-03",
+    "category": "paraphrase",
+    "claim": "The treaty ended the conflict.",
+    "evidence": "The agreement brought the war to an end.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-04",
+    "category": "paraphrase",
+    "claim": "The spacecraft entered orbit.",
+    "evidence": "The probe was placed into orbit.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-05",
+    "category": "paraphrase",
+    "claim": "The city increased its population.",
+    "evidence": "The urban population grew.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-06",
+    "category": "paraphrase",
+    "claim": "The law prohibits smoking indoors.",
+    "evidence": "Indoor smoking is banned by the law.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-07",
+    "category": "paraphrase",
+    "claim": "The medication reduces blood pressure.",
+    "evidence": "The treatment lowers blood pressure.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-08",
+    "category": "paraphrase",
+    "claim": "The bridge was completed in 2010.",
+    "evidence": "Construction of the bridge finished in 2010.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-09",
+    "category": "paraphrase",
+    "claim": "The team won the championship.",
+    "evidence": "The team became champions.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "PAR-10",
+    "category": "paraphrase",
+    "claim": "The algorithm sorts the list.",
+    "evidence": "The procedure orders the list.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-01",
+    "category": "dates_numbers",
+    "claim": "The event occurred in 2020.",
+    "evidence": "The event occurred in 2020.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-02",
+    "category": "dates_numbers",
+    "claim": "The event occurred in 2020.",
+    "evidence": "The event occurred in 2021.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-03",
+    "category": "dates_numbers",
+    "claim": "The launch occurred on March 5, 2022.",
+    "evidence": "The launch occurred on March 5, 2022.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-04",
+    "category": "dates_numbers",
+    "claim": "The launch occurred on March 5, 2022.",
+    "evidence": "The launch occurred on March 6, 2022.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-05",
+    "category": "dates_numbers",
+    "claim": "The box contains 12 items.",
+    "evidence": "The box contains 12 items.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-06",
+    "category": "dates_numbers",
+    "claim": "The box contains 12 items.",
+    "evidence": "The box contains 20 items.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-07",
+    "category": "dates_numbers",
+    "claim": "The tower is 300 meters tall.",
+    "evidence": "The tower is 300 meters tall.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-08",
+    "category": "dates_numbers",
+    "claim": "The tower is 300 meters tall.",
+    "evidence": "The tower is 250 meters tall.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-09",
+    "category": "dates_numbers",
+    "claim": "The meeting was held on 2024-04-12.",
+    "evidence": "The meeting was held on April 12, 2024.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "NUM-10",
+    "category": "dates_numbers",
+    "claim": "The study lasted three years.",
+    "evidence": "The study lasted 3 years.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-01",
+    "category": "entities_jurisdiction",
+    "claim": "The President of India can grant pardons.",
+    "evidence": "The President of the United States can grant pardons.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "India",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-02",
+    "category": "entities_jurisdiction",
+    "claim": "The President can grant reprieves.",
+    "evidence": "The President can grant reprieves.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-03",
+    "category": "entities_jurisdiction",
+    "claim": "Acme acquired Beta.",
+    "evidence": "Beta acquired Acme.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "Acme",
+        "label": "ORG"
+      },
+      {
+        "text": "Beta",
+        "label": "ORG"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-04",
+    "category": "entities_jurisdiction",
+    "claim": "Alpha founded Beta.",
+    "evidence": "Alpha was founded by Beta.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "Alpha",
+        "label": "ORG"
+      },
+      {
+        "text": "Beta",
+        "label": "ORG"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-05",
+    "category": "entities_jurisdiction",
+    "claim": "Dr. Lee led the study.",
+    "evidence": "Dr. Chen led the study.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "Dr. Lee",
+        "label": "PERSON"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-06",
+    "category": "entities_jurisdiction",
+    "claim": "Paris is in France.",
+    "evidence": "Paris is in Texas.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "Paris",
+        "label": "GPE"
+      },
+      {
+        "text": "France",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-07",
+    "category": "entities_jurisdiction",
+    "claim": "The company launched Product X.",
+    "evidence": "The company launched Product X.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "Product X",
+        "label": "PRODUCT"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-08",
+    "category": "entities_jurisdiction",
+    "claim": "The organization operates in Kenya.",
+    "evidence": "The organization operates in Kenya.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "Kenya",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-09",
+    "category": "entities_jurisdiction",
+    "claim": "Mercury is closer to the Sun than Earth.",
+    "evidence": "Mercury is closer to the Sun than Earth.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "Mercury",
+        "label": "LOC"
+      },
+      {
+        "text": "Earth",
+        "label": "LOC"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "ENT-10",
+    "category": "entities_jurisdiction",
+    "claim": "The European Union adopted the regulation.",
+    "evidence": "The European Union rejected the regulation.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "European Union",
+        "label": "ORG"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-01",
+    "category": "unsupported_related",
+    "claim": "The ocean contains a hidden city.",
+    "evidence": "The ocean contains many species.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-02",
+    "category": "unsupported_related",
+    "claim": "The museum opened in 1890.",
+    "evidence": "The museum contains paintings from 1890.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-03",
+    "category": "unsupported_related",
+    "claim": "The engine uses hydrogen.",
+    "evidence": "The engine uses gasoline.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-04",
+    "category": "unsupported_related",
+    "claim": "The author won a Nobel Prize.",
+    "evidence": "The author wrote several novels.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-05",
+    "category": "unsupported_related",
+    "claim": "The mountain is the tallest in Europe.",
+    "evidence": "The mountain is located in Europe.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-06",
+    "category": "unsupported_related",
+    "claim": "The policy reduced unemployment.",
+    "evidence": "The policy addressed employment concerns.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-07",
+    "category": "unsupported_related",
+    "claim": "The compound cures the disease.",
+    "evidence": "The compound was tested in a laboratory.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-08",
+    "category": "unsupported_related",
+    "claim": "The satellite transmits weather images.",
+    "evidence": "The satellite studies atmospheric conditions.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-09",
+    "category": "unsupported_related",
+    "claim": "The school was founded by Maria.",
+    "evidence": "The school was founded in 1920.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "UNS-10",
+    "category": "unsupported_related",
+    "claim": "The device is safe for children.",
+    "evidence": "The device is widely used by children.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-01",
+    "category": "contradiction",
+    "claim": "The door is open.",
+    "evidence": "The door is not open.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-02",
+    "category": "contradiction",
+    "claim": "The device does not contain lead.",
+    "evidence": "The device contains lead.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-03",
+    "category": "contradiction",
+    "claim": "The team did not win.",
+    "evidence": "The team won the final.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-04",
+    "category": "contradiction",
+    "claim": "The law is not applicable.",
+    "evidence": "The law is applicable.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-05",
+    "category": "contradiction",
+    "claim": "The spacecraft landed on Mars in 2023.",
+    "evidence": "The spacecraft landed on Mars in 2022.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [
+      {
+        "text": "spacecraft",
+        "label": "PRODUCT"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-06",
+    "category": "contradiction",
+    "claim": "The sample was collected on July 10, 2021.",
+    "evidence": "The sample was collected on July 11, 2021.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [
+      {
+        "text": "sample",
+        "label": "OBJECT"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-07",
+    "category": "contradiction",
+    "claim": "The river is not in Canada.",
+    "evidence": "The river is in Canada.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [
+      {
+        "text": "Canada",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-08",
+    "category": "contradiction",
+    "claim": "The company has no offices in Berlin.",
+    "evidence": "The company has offices in Berlin.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [
+      {
+        "text": "Berlin",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-09",
+    "category": "contradiction",
+    "claim": "The machine cannot produce electricity.",
+    "evidence": "The machine can produce electricity.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CON-10",
+    "category": "contradiction",
+    "claim": "The report never mentioned the incident.",
+    "evidence": "The report mentioned the incident.",
+    "gold_verdict": "CONTRADICTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-01",
+    "category": "compound_relations",
+    "claim": "A and B signed the agreement.",
+    "evidence": "A signed the agreement.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "A",
+        "label": "ORG"
+      },
+      {
+        "text": "B",
+        "label": "ORG"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-02",
+    "category": "compound_relations",
+    "claim": "A and B signed the agreement.",
+    "evidence": "A and B signed the agreement.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "A",
+        "label": "ORG"
+      },
+      {
+        "text": "B",
+        "label": "ORG"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-03",
+    "category": "compound_relations",
+    "claim": "The rover mapped the crater and collected samples.",
+    "evidence": "The rover mapped the crater.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "rover",
+        "label": "PRODUCT"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-04",
+    "category": "compound_relations",
+    "claim": "The rover mapped the crater and collected samples.",
+    "evidence": "The rover mapped the crater and collected samples.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "rover",
+        "label": "PRODUCT"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-05",
+    "category": "compound_relations",
+    "claim": "The treaty reduced tariffs and increased trade.",
+    "evidence": "The treaty reduced tariffs.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-06",
+    "category": "compound_relations",
+    "claim": "The treaty reduced tariffs and increased trade.",
+    "evidence": "The treaty reduced tariffs and increased trade.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-07",
+    "category": "compound_relations",
+    "claim": "The company opened offices in London and Berlin.",
+    "evidence": "The company opened offices in London.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [
+      {
+        "text": "London",
+        "label": "GPE"
+      },
+      {
+        "text": "Berlin",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-08",
+    "category": "compound_relations",
+    "claim": "The company opened offices in London and Berlin.",
+    "evidence": "The company opened offices in London and Berlin.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "London",
+        "label": "GPE"
+      },
+      {
+        "text": "Berlin",
+        "label": "GPE"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-09",
+    "category": "compound_relations",
+    "claim": "The report lists causes and treatments.",
+    "evidence": "The report lists causes and treatments.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "CMP-10",
+    "category": "compound_relations",
+    "claim": "The report lists causes and treatments.",
+    "evidence": "The report lists causes.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-01",
+    "category": "domains_coreference",
+    "claim": "The mission reached orbit.",
+    "evidence": "The mission reached orbit.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [
+      {
+        "text": "mission",
+        "label": "PRODUCT"
+      }
+    ],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-02",
+    "category": "domains_coreference",
+    "claim": "The company reported profit.",
+    "evidence": "The company reported profit.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-03",
+    "category": "domains_coreference",
+    "claim": "The organization provides healthcare.",
+    "evidence": "The organization provides healthcare.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-04",
+    "category": "domains_coreference",
+    "claim": "The scientist published the result.",
+    "evidence": "The researcher published the result.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-05",
+    "category": "domains_coreference",
+    "claim": "He invented the device.",
+    "evidence": "He invented the device.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-06",
+    "category": "domains_coreference",
+    "claim": "She led the expedition.",
+    "evidence": "She led the expedition.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-07",
+    "category": "domains_coreference",
+    "claim": "Its battery lasts ten hours.",
+    "evidence": "Its battery lasts ten hours.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-08",
+    "category": "domains_coreference",
+    "claim": "The country exports coffee.",
+    "evidence": "The country exports coffee.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-09",
+    "category": "domains_coreference",
+    "claim": "The President can commute sentences.",
+    "evidence": "The President of the United States can commute sentences.",
+    "gold_verdict": "SUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  },
+  {
+    "case_id": "DOM-10",
+    "category": "domains_coreference",
+    "claim": "The company developed the vaccine.",
+    "evidence": "The company developed the software.",
+    "gold_verdict": "UNSUPPORTED",
+    "entities": [],
+    "relevance_score": 0.9
+  }
+]

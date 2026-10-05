@@ -5,10 +5,10 @@ import { ArrowUpRight, CornerDownLeft, Loader2, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const EXAMPLES = [
-  'What is the capital of India?',
-  'Who invented the telephone and in what year?',
-  'Explain the causes of the 1929 stock market crash.',
-  'How many moons does Mars have, and what are their names?',
+  'What are the main causes of ocean tides?',
+  'Who developed the first practical telephone?',
+  'How does photosynthesis work?',
+  'What are the key principles of a circular economy?',
 ]
 
 export function QuestionForm({
@@ -39,7 +39,7 @@ export function QuestionForm({
   return (
     <div className="w-full">
       <form onSubmit={handleSubmit} className="group relative">
-        <div className="relative rounded-2xl border border-border bg-card/70 p-2 backdrop-blur transition-colors focus-within:border-primary/50">
+        <div className="relative rounded-2xl border border-border bg-card p-2 shadow-sm transition-colors focus-within:border-primary/60 focus-within:ring-4 focus-within:ring-primary/10">
           <div className="flex items-start gap-3 px-3 pt-3">
             <Search
               className="mt-1 size-5 shrink-0 text-muted-foreground"
@@ -51,7 +51,7 @@ export function QuestionForm({
               onChange={(event) => onQuestionChange(event.target.value)}
               onKeyDown={handleKeyDown}
               rows={3}
-              placeholder="Ask a factual question and Meta will verify every claim in the answer…"
+              placeholder="Ask a question. The system will generate an answer, extract claims, and verify them against evidence…"
               aria-label="Question to verify"
               className="min-h-24 w-full resize-none bg-transparent text-lg leading-relaxed text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
             />
@@ -69,7 +69,7 @@ export function QuestionForm({
                 </>
               ) : (
                 <>
-                  Analyze claim
+                  Analyze response
                   <ArrowUpRight className="size-4" aria-hidden="true" />
                 </>
               )}

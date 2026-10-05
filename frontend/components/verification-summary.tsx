@@ -1,87 +1,56 @@
 'use client'
 
+import { AlertTriangle, CheckCircle2, CircleHelp, FileCheck2 } from 'lucide-react'
 import { summarize, type VerificationResult } from '@/lib/api'
 
 export function VerificationSummary({ results }: { results: VerificationResult[] }) {
-  const { counts, total, avgConfidence, trust } = summarize(results)
-
-  const segments = [
-    { key: 'supported', label: 'Supported', value: counts.supported, color: 'bg-supported' },
-    {
-      key: 'contradicted',
-      label: 'Contradicted',
-      value: counts.contradicted,
-      color: 'bg-contradicted',
-    },
-    {
-      key: 'unsupported',
-      label: 'Unsupported',
-      value: counts.unsupported,
-      color: 'bg-unsupported',
-    },
+  const { counts, total, avgConfidence } = summarize(results)
+  const cards = [
+    { label: 'Total claims', value: total, icon: FileCheck2, tone: 'text-primary bg-primary/10' },
+    { label: 'Supported', value: counts.supported, icon: CheckCircle2, tone: 'text-supported bg-supported/10' },
+    { label: 'Contradicted', value: counts.contradicted, icon: AlertTriangle, tone: 'text-contradicted bg-contradicted/10' },
+    { label: 'Unsupported', value: counts.unsupported, icon: CircleHelp, tone: 'text-unsupported bg-unsupported/10' },
   ]
 
   return (
-    <section className="animate-rise rounded-2xl border border-border bg-card/60 p-6 backdrop-blur sm:p-8">
-      <div className="flex flex-wrap items-end justify-between gap-6">
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-            Verification summary
-          </p>
-          <div className="mt-3 flex items-baseline gap-3">
-            <span className="font-mono text-5xl font-medium tabular-nums tracking-tight">
-              {Math.round(trust * 100)}%
-            </span>
-            <span className="text-sm text-muted-foreground">of claims supported</span>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Verification overview</p>
+          <h2 className="mt-2 text-xl font-semibold tracking-tight">Evidence-backed claim results</h2>
         </div>
-        <dl className="flex gap-8">
-          <div>
-            <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-              Claims
-            </dt>
-            <dd className="mt-1 font-mono text-2xl tabular-nums">{total}</dd>
-          </div>
-          <div>
-            <dt className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-              Avg. confidence
-            </dt>
-            <dd className="mt-1 font-mono text-2xl tabular-nums">
-              {Math.round(avgConfidence * 100)}%
-            </dd>
-          </div>
-        </dl>
+        <div className="text-right">
+          <p className="text-xs text-muted-foreground">Average confidence</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">{Math.round(avgConfidence * 100)}%</p>
+        </div>
       </div>
-
-      {total > 0 && (
-        <div className="mt-7 flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-muted">
-          {segments
-            .filter((segment) => segment.value > 0)
-            .map((segment) => (
-              <div
-                key={segment.key}
-                className={segment.color}
-                style={{ width: `${(segment.value / total) * 100}%` }}
-                aria-hidden="true"
-              />
-            ))}
-        </div>
-      )}
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        {segments.map((segment) => (
-          <div
-            key={segment.key}
-            className="flex items-center justify-between rounded-xl border border-border bg-background/40 px-4 py-3"
-          >
-            <span className="flex items-center gap-2.5 text-sm text-muted-foreground">
-              <span className={`size-2 rounded-full ${segment.color}`} aria-hidden="true" />
-              {segment.label}
-            </span>
-            <span className="font-mono text-lg tabular-nums">{segment.value}</span>
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {cards.map(({ label, value, icon: Icon, tone }) => (
+          <div key={label} className="rounded-xl border border-border bg-background/60 p-4">
+            <div className={`flex size-9 items-center justify-center rounded-lg ${tone}`}>
+              <Icon className="size-4" aria-hidden="true" />
+            </div>
+            <p className="mt-4 text-2xl font-semibold tabular-nums">{value}</p>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
           </div>
         ))}
       </div>
+      {total > 0 && (
+        <div className="mt-6">
+          <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+            {[
+              { key: 'supported', value: counts.supported, color: 'bg-supported' },
+              { key: 'contradicted', value: counts.contradicted, color: 'bg-contradicted' },
+              { key: 'unsupported', value: counts.unsupported, color: 'bg-unsupported' },
+            ].map(({ key, value, color }) => (
+              <div key={key} className={color} style={{ width: `${(Number(value) / total) * 100}%` }} />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Reliability is shown as claim statistics because the API does not return an overall reliability score.
+          </p>
+        </div>
+      )}
     </section>
   )
 }

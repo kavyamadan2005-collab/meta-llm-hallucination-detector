@@ -32,7 +32,7 @@ class Settings(BaseModel):
     ollama_base_url: str = Field(default="http://localhost:11434")
     ollama_model: str = Field(default="llama3.2:3b")
     ollama_timeout_seconds: float = Field(default=120.0, gt=0)
-    retrieval_enabled_sources: list[str] = Field(default_factory=lambda: ["local", "wikipedia", "openalex", "web_search"])
+    retrieval_enabled_sources: list[str] = Field(default_factory=lambda: ["local", "wikipedia", "web_search"])
     wikipedia_api_url: str = Field(default="https://en.wikipedia.org/w/api.php")
     wikipedia_user_agent: str = Field(default="Meta-LLM-Hallucination-Detection/0.1 (local development)")
     wikipedia_timeout_seconds: float = Field(default=10.0, gt=0)
@@ -61,7 +61,7 @@ class Settings(BaseModel):
             "CORS_ORIGINS",
             "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8501",
         )
-        enabled_sources = os.getenv("RETRIEVAL_ENABLED_SOURCES", "local,wikipedia,openalex,web_search")
+        enabled_sources = os.getenv("RETRIEVAL_ENABLED_SOURCES", "local,wikipedia,web_search")
         parsed_origins = [origin.strip() for origin in origins.split(",") if origin.strip()]
         for required_origin in ("http://localhost:3000", "http://127.0.0.1:3000"):
             if required_origin not in parsed_origins:

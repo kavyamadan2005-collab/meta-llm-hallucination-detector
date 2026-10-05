@@ -40,40 +40,29 @@
 }
 
 :root {
-  color-scheme: dark;
-
-  --background: oklch(0.16 0.012 250);
-  --foreground: oklch(0.96 0.004 250);
-
-  --card: oklch(0.2 0.014 250);
-  --card-foreground: oklch(0.96 0.004 250);
-
-  --popover: oklch(0.2 0.014 250);
-  --popover-foreground: oklch(0.96 0.004 250);
-
-  --primary: oklch(0.78 0.13 196);
-  --primary-foreground: oklch(0.18 0.02 240);
-
-  --secondary: oklch(0.26 0.016 250);
-  --secondary-foreground: oklch(0.96 0.004 250);
-
-  --muted: oklch(0.24 0.014 250);
-  --muted-foreground: oklch(0.68 0.014 250);
-
-  --accent: oklch(0.28 0.02 250);
-  --accent-foreground: oklch(0.96 0.004 250);
-
-  --destructive: oklch(0.65 0.19 22);
-
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.78 0.13 196);
-
-  --supported: oklch(0.76 0.15 162);
-  --contradicted: oklch(0.68 0.19 20);
-  --unsupported: oklch(0.8 0.14 84);
-
-  --radius: 0.75rem;
+  color-scheme: light;
+  --background: oklch(0.975 0.012 225);
+  --foreground: oklch(0.24 0.035 235);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.035 235);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.035 235);
+  --primary: oklch(0.48 0.13 213);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.94 0.025 220);
+  --secondary-foreground: oklch(0.3 0.05 230);
+  --muted: oklch(0.94 0.018 225);
+  --muted-foreground: oklch(0.5 0.035 230);
+  --accent: oklch(0.93 0.035 190);
+  --accent-foreground: oklch(0.25 0.06 215);
+  --destructive: oklch(0.58 0.18 25);
+  --border: oklch(0.88 0.025 225);
+  --input: oklch(0.86 0.03 225);
+  --ring: oklch(0.48 0.13 213);
+  --supported: oklch(0.55 0.14 158);
+  --contradicted: oklch(0.58 0.18 25);
+  --unsupported: oklch(0.67 0.14 72);
+  --radius: 0.8rem;
 }
 
 @layer base {
@@ -88,12 +77,12 @@
 @utility grid-backdrop {
   background-image: linear-gradient(
       to right,
-      color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
+      color-mix(in oklab, var(--primary) 9%, transparent) 1px,
       transparent 1px
     ),
     linear-gradient(
       to bottom,
-      color-mix(in oklab, var(--foreground) 6%, transparent) 1px,
+      color-mix(in oklab, var(--primary) 9%, transparent) 1px,
       transparent 1px
     );
   background-size: 56px 56px;

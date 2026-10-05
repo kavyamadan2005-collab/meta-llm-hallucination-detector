@@ -31,6 +31,11 @@ class DevelopmentLLMProvider:
     _RESPONSES = {
         "what is the capital of france?": "The capital of France is Paris.",
         "when did chandrayaan-3 land on the moon?": "Chandrayaan-3 landed on the Moon in 2023.",
+        "when did chandrayaan-3 land on the moon and which country succeeded in this mission?": (
+            "Chandrayaan-3 successfully soft-landed on the Moon on August 23, 2023. "
+            "India, through ISRO, successfully carried out the mission, becoming the "
+            "first country to soft-land near the lunar south pole."
+        ),
     }
 
     def generate(self, question: str) -> LLMResponse:
@@ -130,7 +135,18 @@ class OllamaLLMProvider:
                 f"{self._base_url}/api/chat",
                 json={
                     "model": self._model,
-                    "messages": [{"role": "user", "content": question}],
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "Answer the user's question concisely in 2 to 4 sentences. "
+                                "Give only the information needed to answer the question. "
+                                "Avoid unnecessary explanations, repetition, lists, speculation, "
+                                "and unrelated facts."
+                            ),
+                        },
+                        {"role": "user", "content": question},
+                    ],
                     "stream": False,
                 },
             )

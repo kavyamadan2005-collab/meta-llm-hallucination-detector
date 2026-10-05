@@ -140,3 +140,9 @@ def test_retrieval_source_configuration_is_loaded() -> None:
     assert settings.retrieval_enabled_sources == ["local", "openalex"]
     assert settings.wikipedia_api_url == "https://wiki.test/api"
     assert settings.openalex_api_key is None
+
+
+def test_openalex_is_opt_in_for_default_retrieval_sources() -> None:
+    settings = Settings()
+
+    assert settings.retrieval_enabled_sources == ["local", "wikipedia", "web_search"]

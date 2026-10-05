@@ -42,6 +42,17 @@ def test_development_provider_answers_chandrayaan_question() -> None:
     assert result.response_text == "Chandrayaan-3 landed on the Moon in 2023."
 
 
+def test_development_provider_answers_complex_chandrayaan_question() -> None:
+    result = DevelopmentLLMProvider().generate(
+        "When did Chandrayaan-3 land on the Moon and which country succeeded in this mission?"
+    )
+
+    assert "August 23, 2023" in result.response_text
+    assert "India" in result.response_text
+    assert "ISRO" in result.response_text
+    assert "first country to soft-land near the lunar south pole" in result.response_text
+
+
 def test_development_provider_marks_unknown_questions() -> None:
     result = DevelopmentLLMProvider().generate("What is the meaning of life?")
 
@@ -83,7 +94,18 @@ def test_ollama_provider_returns_structured_response_and_selects_model() -> None
         "http://ollama.test/api/chat",
         json={
             "model": "test-ollama-model",
-            "messages": [{"role": "user", "content": "Question?"}],
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "Answer the user's question concisely in 2 to 4 sentences. "
+                        "Give only the information needed to answer the question. "
+                        "Avoid unnecessary explanations, repetition, lists, speculation, "
+                        "and unrelated facts."
+                    ),
+                },
+                {"role": "user", "content": "Question?"},
+            ],
             "stream": False,
         },
     )

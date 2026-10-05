@@ -1,161 +1,87 @@
 'use client'
 
 import { useState } from 'react'
-import { CheckCircle2, ChevronDown, CircleAlert, ExternalLink, XCircle } from 'lucide-react'
-import {
-  formatEvidenceText,
-  formatEvidenceTitle,
-  safeHost,
-  verdictKey,
-  type VerificationResult,
-} from '@/lib/api'
+import { CheckCircle2, ChevronDown, CircleHelp, ExternalLink, TriangleAlert } from 'lucide-react'
+import { formatEvidenceText, formatEvidenceTitle, safeHost, verdictKey, type Evidence, type VerificationResult } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
-const VERDICT_STYLES = {
-  supported: {
-    label: 'Supported',
-    icon: CheckCircle2,
-    text: 'text-supported',
-    chip: 'border-supported/30 bg-supported/10 text-supported',
-    bar: 'bg-supported',
-    rail: 'bg-supported',
-  },
-  contradicted: {
-    label: 'Contradicted',
-    icon: XCircle,
-    text: 'text-contradicted',
-    chip: 'border-contradicted/30 bg-contradicted/10 text-contradicted',
-    bar: 'bg-contradicted',
-    rail: 'bg-contradicted',
-  },
-  unsupported: {
-    label: 'Unsupported',
-    icon: CircleAlert,
-    text: 'text-unsupported',
-    chip: 'border-unsupported/30 bg-unsupported/10 text-unsupported',
-    bar: 'bg-unsupported',
-    rail: 'bg-unsupported',
-  },
+const styles = {
+  supported: { label: 'SUPPORTED', icon: CheckCircle2, text: 'text-supported', chip: 'border-supported/25 bg-supported/10 text-supported', rail: 'bg-supported' },
+  contradicted: { label: 'CONTRADICTED', icon: TriangleAlert, text: 'text-contradicted', chip: 'border-contradicted/25 bg-contradicted/10 text-contradicted', rail: 'bg-contradicted' },
+  unsupported: { label: 'UNSUPPORTED', icon: CircleHelp, text: 'text-unsupported', chip: 'border-unsupported/25 bg-unsupported/10 text-unsupported', rail: 'bg-unsupported' },
 } as const
 
+function EvidenceList({ items, label }: { items: Evidence[]; label: string }) {
+  if (!items.length) return null
+  return (
+    <div className="mt-4 border-t border-border pt-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <div className="mt-3 grid gap-3">
+        {items.map((item, index) => {
+          const url = item.source_url || item.url
+          const score = item.relevance_score ?? item.score
+          return (
+            <div key={`${label}-${index}`} className="rounded-xl border border-border bg-background/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <p className="text-sm font-semibold">{formatEvidenceTitle(item, index)}</p>
+                {typeof score === 'number' && <span className="text-xs tabular-nums text-muted-foreground">Relevance {score.toFixed(2)}</span>}
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{formatEvidenceText(item) || 'No evidence text returned.'}</p>
+              {url && (
+                <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
+                  {safeHost(url)} <ExternalLink className="size-3" aria-hidden="true" />
+                </a>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function ClaimCard({ result, index }: { result: VerificationResult; index: number }) {
-  const evidence = Array.isArray(result.evidence) ? result.evidence : []
   const [open, setOpen] = useState(false)
-  const style = VERDICT_STYLES[verdictKey(result.verdict)]
+  const kind = verdictKey(result.verdict)
+  const style = styles[kind]
   const Icon = style.icon
+  const evidence = Array.isArray(result.evidence) ? result.evidence : []
+  const supporting = Array.isArray(result.supporting_evidence) ? result.supporting_evidence : []
+  const contradicting = Array.isArray(result.contradicting_evidence) ? result.contradicting_evidence : []
   const confidence = Math.round((Number(result.confidence) || 0) * 100)
 
   return (
-    <article
-      className="animate-rise overflow-hidden rounded-2xl border border-border bg-card/60 backdrop-blur"
-      style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
-    >
+    <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm" style={{ animationDelay: `${Math.min(index, 8) * 50}ms` }}>
       <div className="flex">
-        <div className={cn('w-0.5 shrink-0', style.rail)} aria-hidden="true" />
+        <div className={cn('w-1 shrink-0', style.rail)} />
         <div className="min-w-0 flex-1 p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-              {result.claim_id}
+            <span className="rounded-md bg-muted px-2 py-1 font-mono text-xs font-semibold text-muted-foreground">{result.claim_id}</span>
+            <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold tracking-wide', style.chip)}>
+              <Icon className="size-3.5" aria-hidden="true" /> {style.label}
             </span>
-            <span
-              className={cn(
-                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide',
-                style.chip,
-              )}
-            >
-              <Icon className="size-3.5" aria-hidden="true" />
-              {style.label}
-            </span>
-            <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
-              {confidence}% confidence
-            </span>
+            <span className="ml-auto text-sm font-semibold tabular-nums text-muted-foreground">{confidence}% confidence</span>
           </div>
-
-          <p className="mt-4 text-pretty text-[15px] leading-relaxed">{result.claim_text}</p>
-
-          <div className="mt-4 h-1 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn('h-1 rounded-full transition-[width] duration-700', style.bar)}
-              style={{ width: `${confidence}%` }}
-              role="progressbar"
-              aria-valuenow={confidence}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`Confidence for claim ${result.claim_id}`}
-            />
+          <p className="mt-4 text-base font-medium leading-relaxed">{result.claim_text}</p>
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+            <div className={cn('h-full rounded-full', style.rail)} style={{ width: `${confidence}%` }} />
           </div>
-
-          {result.explanation && (
-            <p className="mt-5 border-l border-border pl-4 text-sm leading-relaxed text-muted-foreground">
-              {result.explanation}
-            </p>
-          )}
-
-          {evidence.length > 0 && (
-            <div className="mt-5">
-              <button
-                type="button"
-                onClick={() => setOpen((value) => !value)}
-                aria-expanded={open}
-                className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ChevronDown
-                  className={cn('size-3.5 transition-transform', open && 'rotate-180')}
-                  aria-hidden="true"
-                />
-                {evidence.length} evidence {evidence.length === 1 ? 'source' : 'sources'}
-              </button>
-
-              {open && (
-                <ul className="mt-4 grid gap-3">
-                  {evidence.map((item, evidenceIndex) => {
-                    const url =
-                      (typeof item.source_url === 'string' && item.source_url) ||
-                      (typeof item.url === 'string' && item.url) ||
-                      null
-                    const text = formatEvidenceText(item)
-                    const score =
-                      typeof item.relevance_score === 'number'
-                        ? item.relevance_score
-                        : typeof item.score === 'number'
-                          ? item.score
-                          : null
-                    return (
-                      <li
-                        key={`${result.claim_id}-evidence-${evidenceIndex}`}
-                        className="rounded-xl border border-border bg-background/40 p-4"
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <p className="text-sm font-medium leading-snug">
-                            {formatEvidenceTitle(item, evidenceIndex)}
-                          </p>
-                          {typeof score === 'number' && (
-                            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                              score {score.toFixed(2)}
-                            </span>
-                          )}
-                        </div>
-                        {text && (
-                          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                            {text}
-                          </p>
-                        )}
-                        {url && (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 font-mono text-[11px] text-primary transition-colors hover:border-primary/50 hover:bg-primary/10"
-                          >
-                            {safeHost(url)}
-                            <ExternalLink className="size-3" aria-hidden="true" />
-                          </a>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
+          {result.explanation && <p className="mt-4 border-l-2 border-primary/30 pl-4 text-sm leading-relaxed text-muted-foreground">{result.explanation}</p>}
+          <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80">
+            <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
+            {evidence.length ? `${evidence.length} evidence ${evidence.length === 1 ? 'source' : 'sources'}` : 'No evidence returned'}
+          </button>
+          {open && (
+            <div>
+              {supporting.length || contradicting.length ? (
+                <>
+                  <EvidenceList items={supporting} label="Supporting evidence" />
+                  <EvidenceList items={contradicting} label="Contradicting evidence" />
+                </>
+              ) : (
+                <EvidenceList items={evidence} label="Retrieved evidence" />
               )}
+              {!evidence.length && <p className="mt-4 rounded-lg bg-muted p-3 text-sm text-muted-foreground">No evidence was found for this claim.</p>}
             </div>
           )}
         </div>

@@ -29,10 +29,10 @@ export function BackendStatus({ className }: { className?: string }) {
 
   const label =
     status === 'checking'
-      ? '🟡 CHECKING BACKEND'
+      ? 'Checking backend'
       : status === 'online'
-        ? '🟢 BACKEND ONLINE'
-        : '🔴 BACKEND OFFLINE'
+        ? 'Backend online'
+        : 'Backend offline'
 
   return (
     <div

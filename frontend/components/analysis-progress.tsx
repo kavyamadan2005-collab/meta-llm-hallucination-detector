@@ -5,10 +5,11 @@ import { Check, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const STAGES = [
-  { label: 'Generating answer', detail: 'Querying the local language model' },
-  { label: 'Extracting claims', detail: 'Decomposing the answer into atomic facts' },
-  { label: 'Retrieving evidence', detail: 'Searching sources for each claim' },
-  { label: 'Verifying claims', detail: 'Comparing claims against retrieved evidence' },
+  { label: 'Question', detail: 'Input received' },
+  { label: 'LLM response', detail: 'Generating an answer' },
+  { label: 'Claim extraction', detail: 'Finding factual statements' },
+  { label: 'Evidence retrieval', detail: 'Searching configured sources' },
+  { label: 'Claim verification', detail: 'Comparing claims with evidence' },
 ]
 
 /**
@@ -41,7 +42,7 @@ export function AnalysisProgress({ question }: { question: string }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">
-            Analyzing your question...
+            Analysis in progress
           </p>
           <h2 className="mt-2 text-pretty text-xl font-medium leading-snug">{question}</h2>
         </div>
@@ -51,7 +52,10 @@ export function AnalysisProgress({ question }: { question: string }) {
         </p>
       </div>
 
-      <div className="mt-8 space-y-1">
+      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        The backend exposes one request, so the stepper communicates the analysis pipeline while the response is being prepared.
+      </p>
+      <div className="mt-8 grid gap-2 sm:grid-cols-5">
         {STAGES.map((item, index) => {
           const done = index < stage
           const active = index === stage
@@ -59,11 +63,11 @@ export function AnalysisProgress({ question }: { question: string }) {
             <div
               key={item.label}
               className={cn(
-                'flex items-start gap-4 rounded-xl px-3 py-3 transition-colors',
+                'relative rounded-xl border border-border px-3 py-4 transition-colors',
                 active && 'bg-accent/40',
               )}
             >
-              <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center">
+              <div className="flex items-center gap-2">
                 {done ? (
                   <span className="flex size-5 items-center justify-center rounded-full bg-supported/15">
                     <Check className="size-3 text-supported" aria-hidden="true" strokeWidth={3} />
@@ -74,7 +78,7 @@ export function AnalysisProgress({ question }: { question: string }) {
                   <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                 )}
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="mt-3 min-w-0">
                 <p
                   className={cn(
                     'text-sm font-medium transition-colors',
@@ -86,11 +90,7 @@ export function AnalysisProgress({ question }: { question: string }) {
                   {item.label}
                 </p>
                 <p className="mt-0.5 text-xs text-muted-foreground/70">{item.detail}</p>
-                {active && (
-                  <div className="mt-3 h-px w-full overflow-hidden bg-border">
-                    <div className="animate-sweep h-px w-1/3 bg-primary" />
-                  </div>
-                )}
+                {active && <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-primary/10"><div className="animate-sweep h-full w-1/3 bg-primary" /></div>}
               </div>
             </div>
           )

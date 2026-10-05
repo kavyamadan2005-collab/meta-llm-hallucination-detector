@@ -34,6 +34,8 @@ export interface VerificationResult {
   confidence: number
   explanation?: string | null
   evidence?: Evidence[] | null
+  supporting_evidence?: Evidence[] | null
+  contradicting_evidence?: Evidence[] | null
 }
 
 export interface LLMResponse {
@@ -122,6 +124,12 @@ function toVerificationResult(value: unknown): VerificationResult | null {
   const evidence = Array.isArray(value.evidence)
     ? value.evidence.map(toEvidence).filter((item): item is Evidence => item !== null)
     : []
+  const supportingEvidence = Array.isArray(value.supporting_evidence)
+    ? value.supporting_evidence.map(toEvidence).filter((item): item is Evidence => item !== null)
+    : []
+  const contradictingEvidence = Array.isArray(value.contradicting_evidence)
+    ? value.contradicting_evidence.map(toEvidence).filter((item): item is Evidence => item !== null)
+    : []
 
   return {
     claim_id: claimId,
@@ -130,6 +138,8 @@ function toVerificationResult(value: unknown): VerificationResult | null {
     confidence: readNumber(value.confidence) ?? 0,
     explanation: readString(value.explanation),
     evidence,
+    supporting_evidence: supportingEvidence,
+    contradicting_evidence: contradictingEvidence,
   }
 }
 
@@ -241,8 +251,7 @@ export function summarize(results: VerificationResult[]) {
   const avgConfidence = total
     ? results.reduce((sum, r) => sum + (Number(r.confidence) || 0), 0) / total
     : 0
-  const trust = total ? counts.supported / total : 0
-  return { counts, total, avgConfidence, trust }
+  return { counts, total, avgConfidence }
 }
 
 export function formatEvidenceText(evidence: Evidence): string {

@@ -114,7 +114,12 @@ class DevelopmentWebSearchProvider:
         "chandrayaan-3": WebSearchResult(
             title="[Development web data] Chandrayaan-3",
             url="https://development.invalid/chandrayaan-3",
-            text="[Development web data] Chandrayaan-3 landed on the Moon in 2023.",
+            text=(
+                "[Development web data] Chandrayaan-3 successfully soft-landed "
+                "on the Moon on August 23, 2023. The mission included the "
+                "Vikram lander and Pragyan rover. Pragyan operated on the "
+                "lunar surface and collected and transmitted scientific data."
+            ),
             domain="development.invalid",
         ),
         "photosynthesis": WebSearchResult(
