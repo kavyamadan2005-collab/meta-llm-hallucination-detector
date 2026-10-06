@@ -74,6 +74,52 @@ def test_claim_extraction_fallback_does_not_duplicate_spacy_entity() -> None:
     ]
 
 
+def test_claim_extraction_filters_standalone_meta_sentences() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract("That is incorrect. BIT was established in 1979.")
+
+    assert [claim.original_sentence for claim in claims] == ["BIT was established in 1979."]
+
+
+def test_claim_extraction_filters_standalone_correct_judgment() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract("That is correct. BIT was established in 1979.")
+
+    assert [claim.original_sentence for claim in claims] == ["BIT was established in 1979."]
+
+
+def test_claim_extraction_keeps_meta_judgment_with_factual_content() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract(
+        "The statement that BIT was established in 2024 is incorrect."
+    )
+
+    assert [claim.original_sentence for claim in claims] == [
+        "The statement that BIT was established in 2024 is incorrect."
+    ]
+
+
+def test_claim_extraction_keeps_factual_content_after_meta_judgment() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract(
+        "It is incorrect to say that BIT was established in 2024; "
+        "BIT was established in 1979."
+    )
+
+    assert [claim.original_sentence for claim in claims] == [
+        "It is incorrect to say that BIT was established in 2024; "
+        "BIT was established in 1979."
+    ]
+
+
 def test_extracted_chandrayaan_claim_builds_expected_graph() -> None:
     nlp = spacy.blank("en")
     nlp.add_pipe("sentencizer")

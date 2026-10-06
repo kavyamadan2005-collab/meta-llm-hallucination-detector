@@ -12,6 +12,10 @@ from modules.claims.models import Claim
 
 _FILLER_STARTS = ("hello", "hi", "hey", "sure", "of course", "as an ai")
 _OPINION_STARTS = ("i think", "i believe", "in my opinion", "i feel")
+_STANDALONE_META_SENTENCE = re.compile(
+    r"^(?:yes|no|that(?:'s| is) (?:correct|incorrect|true|false)|"
+    r"this is (?:correct|incorrect)|the answer is (?:correct|incorrect))[\s.!]*$"
+)
 _FALLBACK_PATTERNS = (
     re.compile(r"\b[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+\b"),
     re.compile(r"\b(?=[A-Za-z0-9._/-]*[A-Za-z])(?=[A-Za-z0-9._/-]*\d)[A-Za-z][A-Za-z0-9._/-]*\b"),
@@ -85,5 +89,7 @@ class ClaimExtractor:
         if not normalized or normalized.endswith("?"):
             return False
         if normalized.startswith(_FILLER_STARTS) or normalized.startswith(_OPINION_STARTS):
+            return False
+        if _STANDALONE_META_SENTENCE.fullmatch(normalized):
             return False
         return bool(re.search(r"[A-Za-z0-9]", normalized))

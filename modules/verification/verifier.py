@@ -302,6 +302,7 @@ class RuleBasedVerifier:
 
         claim_relation = self._relation_signature(claim_text)
         evidence_relation = self._relation_signature(evidence_text)
+        aligned_relation = False
         if self._has_partial_compound_support(claim_text, evidence_text):
             return None
         if self._has_reversed_founded_relation(claim_text, evidence_text):
@@ -325,7 +326,16 @@ class RuleBasedVerifier:
                 evidence_relation,
             ):
                 return "contradict"
-            if self._relation_conflicts(claim_relation, evidence_relation):
+            aligned_relation = self._has_aligned_relation(
+                claim_text,
+                evidence_text,
+                claim_relation,
+                evidence_relation,
+            )
+            if (
+                self._relation_conflicts(claim_relation, evidence_relation)
+                and not aligned_relation
+            ):
                 return None
 
         # Measure how much of the claim is covered by the evidence.
@@ -350,6 +360,7 @@ class RuleBasedVerifier:
                 self._canonical_token(token)
                 for token in evidence_tokens
             )
+            and not aligned_relation
         ):
             return None
 
@@ -513,6 +524,28 @@ class RuleBasedVerifier:
             and claim_predicate != evidence_predicate
         )
 
+    def _has_aligned_relation(
+        self,
+        claim_text: str,
+        evidence_text: str,
+        claim_relation: tuple[frozenset[str], str, frozenset[str]],
+        evidence_relation: tuple[frozenset[str], str, frozenset[str]],
+    ) -> bool:
+        """Allow the fallback to assess compatible signatures with extra context."""
+        claim_subject, claim_predicate, claim_object = claim_relation
+        evidence_subject, evidence_predicate, evidence_object = evidence_relation
+        if claim_predicate != evidence_predicate:
+            return False
+        if not claim_subject & evidence_subject or not claim_object & evidence_object:
+            return False
+        object_overlap = len(claim_object & evidence_object) / len(claim_object)
+        if object_overlap < max(self.min_token_overlap, 0.6):
+            return False
+        claim_content = self._comparison_tokens(claim_text)
+        evidence_content = self._comparison_tokens(evidence_text)
+        overlap = len(claim_content & evidence_content) / max(1, len(claim_content))
+        return overlap >= max(self.min_token_overlap, 0.6)
+
     @staticmethod
     def _polarity(text: str) -> str:
         """Detect only direct sentence-level negation or modal denial."""
@@ -534,7 +567,16 @@ class RuleBasedVerifier:
         """Keep a multi-clause claim unsupported when evidence covers one clause."""
         if not re.search(r"\band\b", claim_text.casefold()):
             return False
-        claim_parts = re.split(r"\band\b", claim_text.casefold(), maxsplit=1)
+        normalized = claim_text.casefold()
+        conjunction = re.search(r"\band\b", normalized)
+        if conjunction is None:
+            return False
+        prefix = normalized[:conjunction.start()]
+        if re.search(r"\b(?:between|in|on)\s+[^.!?;]*$", prefix):
+            return False
+        if re.search(r"\bfrom\s+[^.!?;]*\bto\s+[^.!?;]*$", prefix):
+            return False
+        claim_parts = [prefix, normalized[conjunction.end():]]
         if len(claim_parts) != 2:
             return False
         second_part = cls._comparison_tokens(claim_parts[1])

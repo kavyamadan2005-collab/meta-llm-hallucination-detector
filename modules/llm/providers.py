@@ -139,10 +139,18 @@ class OllamaLLMProvider:
                         {
                             "role": "system",
                             "content": (
-                                "Answer the user's question concisely in 2 to 4 sentences. "
-                                "Give only the information needed to answer the question. "
-                                "Avoid unnecessary explanations, repetition, lists, speculation, "
-                                "and unrelated facts."
+                                "Answer the user's question directly and concisely. When you know a factual "
+                                "answer, state it clearly. For uncommon or obscure questions, do not refuse "
+                                "merely because the entity is unfamiliar; if you have a reasonable factual "
+                                "basis, provide the best answer you can. Preserve the user's named entities, "
+                                "places, organizations, people, dates, and other subjects exactly; do not "
+                                "substitute a different entity. Do not invent sources or claim that you "
+                                "searched the web. Do not fabricate facts simply to provide an answer. If "
+                                "you genuinely have insufficient knowledge to answer reliably, clearly state "
+                                "the uncertainty rather than inventing information. Your answer will be "
+                                "independently checked by a separate evidence-retrieval and hallucination-"
+                                "verification system, so make factual claims clear and specific. Keep the "
+                                "response concise, preferably 2 to 4 sentences."
                             ),
                         },
                         {"role": "user", "content": question},

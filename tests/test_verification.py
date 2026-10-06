@@ -667,3 +667,28 @@ def test_uncertain_relation_falls_back_to_existing_overlap_behavior() -> None:
         [evidence("The policy addressed employment concerns.")],
     )
     assert result.verdict == Verdict.SUPPORTED
+
+
+def test_everest_highest_mountain_claim_is_supported_by_natural_evidence() -> None:
+    claim_text = (
+        "Mount Everest, located in the Himalayas on the border between Nepal and Tibet, "
+        "China, is the highest mountain in the world, with a height of approximately "
+        "8,848 meters (29,029 feet) above sea level."
+    )
+    evidence_text = (
+        "Mount Everest is the highest mountain in the world, at 8,848.86 metres "
+        "(29,031.7 ft) above sea level and lies on the border between Nepal and China."
+    )
+
+    result = RuleBasedVerifier().verify(
+        claim(claim_text),
+        [evidence(evidence_text, score=0.86)],
+    )
+
+    assert result.verdict == Verdict.SUPPORTED
+    assert result.supporting_evidence
+    if result.evidence_diagnostics:
+        assert result.evidence_diagnostics[0].relation == "support"
+        assert result.evidence_diagnostics[0].decision_reason == (
+            "support via conservative factual alignment fallback"
+        )
