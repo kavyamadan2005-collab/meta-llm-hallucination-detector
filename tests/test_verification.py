@@ -93,6 +93,77 @@ def test_same_entity_with_same_explicit_date_is_not_contradicted() -> None:
     assert result.verdict != Verdict.CONTRADICTED
 
 
+def test_same_complete_date_supports_matching_event_without_entities() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The launch occurred on March 5, 2022."),
+        [evidence("The launch occurred on March 5, 2022.")],
+    )
+
+    assert result.verdict == Verdict.SUPPORTED
+
+
+def test_one_day_mismatch_for_same_event_is_contradicted() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The launch occurred on March 5, 2022."),
+        [evidence("The launch occurred on March 6, 2022.")],
+    )
+
+    assert result.verdict == Verdict.CONTRADICTED
+
+
+def test_different_dates_for_unrelated_events_are_not_contradicted() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The launch occurred on March 5, 2022."),
+        [evidence("The sample was collected on March 6, 2022.")],
+    )
+
+    assert result.verdict != Verdict.CONTRADICTED
+
+
+def test_year_mismatch_behavior_is_preserved() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The launch occurred on March 5, 2022."),
+        [evidence("The launch occurred on March 5, 2021.")],
+    )
+
+    assert result.verdict == Verdict.CONTRADICTED
+
+
+def test_safe_predicate_paraphrases_support_matching_objects() -> None:
+    verifier = RuleBasedVerifier()
+
+    assert verifier.verify(
+        claim("The city increased its population."),
+        [evidence("The urban population grew.")],
+    ).verdict == Verdict.SUPPORTED
+    assert verifier.verify(
+        claim("The algorithm sorts the list."),
+        [evidence("The procedure orders the list.")],
+    ).verdict == Verdict.SUPPORTED
+
+
+def test_safe_predicate_paraphrases_do_not_support_different_objects() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The algorithm sorts the list."),
+        [evidence("The procedure orders the table.")],
+    )
+
+    assert result.verdict == Verdict.UNSUPPORTED
+
+
+def test_relation_direction_is_preserved_for_founded_by() -> None:
+    verifier = RuleBasedVerifier()
+
+    assert verifier.verify(
+        claim("Alpha founded Beta."),
+        [evidence("Alpha founded Beta.")],
+    ).verdict == Verdict.SUPPORTED
+    assert verifier.verify(
+        claim("Alpha founded Beta."),
+        [evidence("Alpha was founded by Beta.")],
+    ).verdict != Verdict.SUPPORTED
+
+
 def test_different_entities_with_conflicting_explicit_dates_are_not_contradicted() -> None:
     claim_data = Claim(
         claim_id="C1",
@@ -512,3 +583,87 @@ def test_context_is_query_only_and_original_claim_text_is_preserved() -> None:
 
     assert "Acme" in retriever.queries[1]
     assert results[1].claim_text == current_text
+
+
+def test_relation_reversal_is_not_supported() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("Acme acquired Beta."),
+        [evidence("Beta acquired Acme.")],
+    )
+    assert result.verdict == Verdict.UNSUPPORTED
+
+
+def test_subject_object_mismatch_is_not_supported() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The engine uses hydrogen."),
+        [evidence("The engine uses gasoline.")],
+    )
+    assert result.verdict == Verdict.UNSUPPORTED
+
+
+def test_predicate_conflict_is_not_supported() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The European Union adopted the regulation."),
+        [evidence("The European Union rejected the regulation.")],
+    )
+    assert result.verdict == Verdict.UNSUPPORTED
+
+
+def test_entity_identity_mismatch_is_not_supported() -> None:
+    claim_data = Claim(
+        claim_id="C1",
+        claim_text="Dr. Lee led the study.",
+        original_sentence="Dr. Lee led the study.",
+        sentence_index=0,
+        entities=[{"text": "Dr. Lee", "label": "PERSON"}],
+    )
+    result = RuleBasedVerifier().verify(
+        claim_data,
+        [evidence("Dr. Chen led the study.")],
+    )
+    assert result.verdict == Verdict.UNSUPPORTED
+
+
+def test_basic_modal_contradiction_is_detected() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The machine cannot produce electricity."),
+        [evidence("The machine can produce electricity.")],
+    )
+    assert result.verdict == Verdict.CONTRADICTED
+
+
+def test_safe_paraphrase_equivalences_are_supported() -> None:
+    examples = [
+        ("The company purchased the startup.", "The firm acquired the young company."),
+        ("The scientist discovered the particle.", "The researcher found the particle."),
+        ("The team won the championship.", "The team became champions."),
+        ("The spacecraft entered orbit.", "The probe was placed into orbit."),
+        ("The treaty ended the conflict.", "The agreement brought the war to an end."),
+    ]
+    for claim_text, evidence_text in examples:
+        result = RuleBasedVerifier().verify(claim(claim_text), [evidence(evidence_text)])
+        assert result.verdict == Verdict.SUPPORTED
+
+
+def test_partial_compound_evidence_is_not_full_support() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The rover mapped the crater and collected samples."),
+        [evidence("The rover mapped the crater.")],
+    )
+    assert result.verdict == Verdict.UNSUPPORTED
+
+
+def test_obvious_numeric_count_conflict_is_contradicted() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The box contains 12 items."),
+        [evidence("The box contains 20 items.")],
+    )
+    assert result.verdict == Verdict.CONTRADICTED
+
+
+def test_uncertain_relation_falls_back_to_existing_overlap_behavior() -> None:
+    result = RuleBasedVerifier().verify(
+        claim("The policy addressed employment concerns."),
+        [evidence("The policy addressed employment concerns.")],
+    )
+    assert result.verdict == Verdict.SUPPORTED

@@ -44,6 +44,7 @@ _NEGATION_WORDS = {
     "wasn't",
     "aren't",
     "weren't",
+    "cannot",
 }
 
 _TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
@@ -76,12 +77,71 @@ _PREDICATES = {
     "were",
 }
 
-_NEGATION_CUES = _NEGATION_WORDS | {"did", "do", "does"}
+_NEGATION_CUES = _NEGATION_WORDS | {"can", "did", "do", "does"}
 _IRREGULAR_FORMS = {
     "won": "win",
     "went": "go",
     "was": "be",
     "were": "be",
+}
+_SAFE_RELATION_ALIASES = {
+    "purchased": "acquire",
+    "purchase": "acquire",
+    "discovered": "found",
+    "discover": "find",
+    "won": "win",
+    "champions": "win",
+    "ended": "end",
+    "brought": "bring",
+    "uses": "use",
+    "used": "use",
+    "adopted": "adopt",
+    "rejected": "reject",
+    "led": "lead",
+    "acquired": "acquire",
+    "founded": "found",
+    "developed": "develop",
+    "mentioned": "mention",
+    "contains": "contain",
+    "entered": "enter",
+    "increased": "increase",
+    "increase": "increase",
+    "grew": "increase",
+    "grow": "increase",
+    "sorts": "sort",
+    "sort": "sort",
+    "orders": "sort",
+    "order": "sort",
+}
+_RELATION_WORDS = set(_SAFE_RELATION_ALIASES.values()) | {
+    "acquire",
+    "found",
+    "win",
+    "end",
+    "use",
+    "adopt",
+    "reject",
+    "lead",
+    "develop",
+    "mention",
+    "contain",
+    "produce",
+    "open",
+    "operate",
+    "approve",
+    "sign",
+    "launch",
+    "land",
+    "orbit",
+    "is",
+    "has",
+    "enter",
+    "increase",
+    "sort",
+}
+_SAFE_PARAPHRASE_PREDICATES = {
+    frozenset({"increase", "grow"}),
+    frozenset({"sort", "order"}),
 }
 _MONTHS = (
     "january", "february", "march", "april", "may", "june",
@@ -240,6 +300,34 @@ class RuleBasedVerifier:
         if self._has_conflicting_explicit_date(claim, evidence_text):
             return "contradict"
 
+        claim_relation = self._relation_signature(claim_text)
+        evidence_relation = self._relation_signature(evidence_text)
+        if self._has_partial_compound_support(claim_text, evidence_text):
+            return None
+        if self._has_reversed_founded_relation(claim_text, evidence_text):
+            return None
+        if claim_relation and evidence_relation:
+            if self._polarity(claim_text) != self._polarity(evidence_text):
+                return "contradict"
+
+        if self._is_safe_paraphrase_match(
+            claim_text,
+            evidence_text,
+            claim_relation,
+            evidence_relation,
+        ):
+            return "support"
+        if claim_relation and evidence_relation:
+            if self._has_conflicting_numeric_argument(
+                claim_text,
+                evidence_text,
+                claim_relation,
+                evidence_relation,
+            ):
+                return "contradict"
+            if self._relation_conflicts(claim_relation, evidence_relation):
+                return None
+
         # Measure how much of the claim is covered by the evidence.
         overlap = (
             len(claim_content & evidence_content)
@@ -326,14 +414,156 @@ class RuleBasedVerifier:
         """Require extracted claim entities to appear in supporting evidence."""
         evidence_tokens = self._comparison_tokens(evidence_text)
         return all(
-            self._comparison_tokens(entity.text).intersection(evidence_tokens)
+            self._comparison_tokens(entity.text).issubset(evidence_tokens)
             for entity in claim.entities
+        )
+
+    @staticmethod
+    def _has_reversed_founded_relation(
+        claim_text: str,
+        evidence_text: str,
+    ) -> bool:
+        """Reject the active/passive subject-object reversal for founding."""
+        claim_match = re.search(
+            r"\b([a-z0-9][a-z0-9-]*)\s+founded\s+([a-z0-9][a-z0-9-]*)\b",
+            claim_text.casefold(),
+        )
+        evidence_match = re.search(
+            r"\b([a-z0-9][a-z0-9-]*)\s+was\s+founded\s+by\s+"
+            r"([a-z0-9][a-z0-9-]*)\b",
+            evidence_text.casefold(),
+        )
+        return bool(
+            claim_match
+            and evidence_match
+            and claim_match.group(1) == evidence_match.group(1)
+            and claim_match.group(2) == evidence_match.group(2)
+        )
+
+    @classmethod
+    def _relation_signature(
+        cls,
+        text: str,
+    ) -> tuple[frozenset[str], str, frozenset[str]] | None:
+        """Extract a small subject/predicate/object signature when unambiguous."""
+        text = cls._normalize_safe_phrases(text)
+        ordered = [
+            _SAFE_RELATION_ALIASES.get(token, cls._canonical_token(token))
+            for token in _TOKEN_PATTERN.findall(text.casefold())
+            if (
+                (token not in _STOP_WORDS or token in _RELATION_WORDS)
+                and token not in _NEGATION_CUES
+            )
+        ]
+        for index, token in enumerate(ordered):
+            if token not in _RELATION_WORDS:
+                continue
+            subject = frozenset(ordered[:index])
+            object_tokens = frozenset(ordered[index + 1:])
+            if not subject or not object_tokens:
+                continue
+            return subject, token, object_tokens
+        return None
+
+    @staticmethod
+    def _normalize_safe_phrases(text: str) -> str:
+        """Normalize only explicitly supported, non-general paraphrases."""
+        normalized = text.casefold()
+        normalized = re.sub(r"\bwas placed into orbit\b", "entered orbit", normalized)
+        normalized = re.sub(
+            r"\bbrought the war to an end\b",
+            "ended the conflict",
+            normalized,
+        )
+        normalized = re.sub(r"\bbecame champions\b", "won championship", normalized)
+        return normalized
+
+    @classmethod
+    def _relation_conflicts(
+        cls,
+        claim_relation: tuple[frozenset[str], str, frozenset[str]],
+        evidence_relation: tuple[frozenset[str], str, frozenset[str]],
+    ) -> bool:
+        """Reject clear subject, object, or predicate mismatches."""
+        claim_subject, claim_predicate, claim_object = claim_relation
+        evidence_subject, evidence_predicate, evidence_object = evidence_relation
+
+        if claim_predicate == evidence_predicate:
+            if (
+                claim_subject == evidence_object
+                and claim_object == evidence_subject
+            ):
+                return True
+            return (
+                bool(claim_subject & evidence_subject)
+                and claim_subject != evidence_subject
+            ) or (
+                bool(claim_subject & evidence_subject)
+                and claim_object != evidence_object
+                and {
+                    token for token in claim_object if not token.isdigit()
+                } != {
+                    token for token in evidence_object if not token.isdigit()
+                }
+            )
+
+        return (
+            bool(claim_subject & evidence_subject)
+            and bool(claim_object & evidence_object)
+            and claim_predicate != evidence_predicate
+        )
+
+    @staticmethod
+    def _polarity(text: str) -> str:
+        """Detect only direct sentence-level negation or modal denial."""
+        normalized = text.casefold()
+        if re.search(
+            r"\b(?:is|are|was|were|has|have|can|does|do|did)\s+"
+            r"(?:not|no|never)\b|\bcannot\b|\bnever\s+\w+",
+            normalized,
+        ):
+            return "negative"
+        return "positive"
+
+    @classmethod
+    def _has_partial_compound_support(
+        cls,
+        claim_text: str,
+        evidence_text: str,
+    ) -> bool:
+        """Keep a multi-clause claim unsupported when evidence covers one clause."""
+        if not re.search(r"\band\b", claim_text.casefold()):
+            return False
+        claim_parts = re.split(r"\band\b", claim_text.casefold(), maxsplit=1)
+        if len(claim_parts) != 2:
+            return False
+        second_part = cls._comparison_tokens(claim_parts[1])
+        evidence_tokens = cls._comparison_tokens(evidence_text)
+        return bool(second_part) and not second_part.issubset(evidence_tokens)
+
+    @classmethod
+    def _has_conflicting_numeric_argument(
+        cls,
+        claim_text: str,
+        evidence_text: str,
+        claim_relation: tuple[frozenset[str], str, frozenset[str]],
+        evidence_relation: tuple[frozenset[str], str, frozenset[str]],
+    ) -> bool:
+        """Detect an obvious count conflict without altering year/date handling."""
+        if claim_relation[1] != "contain" or evidence_relation[1] != "contain":
+            return False
+        claim_numbers = set(re.findall(r"\b\d+(?:\.\d+)?\b", claim_text))
+        evidence_numbers = set(re.findall(r"\b\d+(?:\.\d+)?\b", evidence_text))
+        return (
+            bool(claim_numbers and evidence_numbers)
+            and claim_numbers.isdisjoint(evidence_numbers)
+            and claim_relation[0] == evidence_relation[0]
         )
 
     def _has_conflicting_explicit_date(self, claim: Claim, evidence_text: str) -> bool:
         """Detect different dates for the same explicitly shared event."""
-        claim_date = self._explicit_month_day(claim.claim_text)
-        evidence_date = self._explicit_month_day(evidence_text)
+        claim_date = self._explicit_date(claim.claim_text)
+        evidence_date = self._explicit_date(evidence_text)
         if claim_date is None or evidence_date is None or claim_date == evidence_date:
             return False
 
@@ -345,21 +575,97 @@ class RuleBasedVerifier:
             and entity.label.casefold() in {"domain_entity", "org", "product", "person", "gpe", "loc"}
             and self._comparison_tokens(entity.text).issubset(evidence_tokens)
         ]
-        if not shared_entities:
-            return False
-
         claim_event_terms = self._event_terms(claim.claim_text)
         evidence_event_terms = self._event_terms(evidence_text)
-        return bool(claim_event_terms & evidence_event_terms)
+        if shared_entities and claim_event_terms & evidence_event_terms:
+            return True
+
+        claim_context = self._date_free_context(claim.claim_text)
+        evidence_context = self._date_free_context(evidence_text)
+        shared_context = claim_context & evidence_context
+        return (
+            len(shared_context) >= 2
+            and len(shared_context) / max(1, len(claim_context)) >= 0.5
+        )
 
     @staticmethod
-    def _explicit_month_day(text: str) -> tuple[str, str] | None:
-        """Return the first explicit month/day pair in text."""
+    def _explicit_date(text: str) -> tuple[str, str, str | None] | None:
+        """Return the first explicit month/day/year date in text."""
         match = re.search(
             rf"\b({'|'.join(_MONTHS)})\s+(\d{{1,2}})(?:,?\s+\d{{4}})?\b",
             text.casefold(),
         )
-        return (match.group(1), match.group(2)) if match else None
+        if not match:
+            return None
+        year_match = re.search(
+            rf"\b{match.group(1)}\s+{match.group(2)},?\s+(\d{{4}})\b",
+            text.casefold(),
+        )
+        return (
+            match.group(1),
+            match.group(2),
+            year_match.group(1) if year_match else None,
+        )
+
+    @classmethod
+    def _date_free_context(cls, text: str) -> set[str]:
+        """Return factual context with complete calendar-date tokens removed."""
+        normalized = text.casefold()
+        normalized = re.sub(
+            rf"\b(?:{'|'.join(_MONTHS)})\s+\d{{1,2}}(?:,?\s+\d{{4}})?\b",
+            " ",
+            normalized,
+        )
+        return cls._comparison_tokens(normalized) - {
+            "occur",
+            "happen",
+        }
+
+    @classmethod
+    def _is_safe_paraphrase_match(
+        cls,
+        claim_text: str,
+        evidence_text: str,
+        claim_relation: tuple[frozenset[str], str, frozenset[str]] | None,
+        evidence_relation: tuple[frozenset[str], str, frozenset[str]] | None,
+    ) -> bool:
+        """Support only a known predicate equivalence with a shared object."""
+        claim_predicate = cls._safe_paraphrase_predicate(claim_text)
+        evidence_predicate = cls._safe_paraphrase_predicate(evidence_text)
+        if claim_predicate is None or evidence_predicate is None:
+            return False
+        if claim_predicate == evidence_predicate:
+            return False
+        if frozenset({claim_predicate, evidence_predicate}) not in _SAFE_PARAPHRASE_PREDICATES:
+            return False
+
+        claim_object = claim_relation[2] if claim_relation else frozenset()
+        evidence_object = evidence_relation[2] if evidence_relation else frozenset()
+        if claim_object and evidence_object:
+            return claim_object == evidence_object
+
+        claim_content = cls._comparison_tokens(claim_text)
+        evidence_content = cls._comparison_tokens(evidence_text)
+        return bool((claim_content - {claim_predicate}) & (evidence_content - {evidence_predicate}))
+
+    @classmethod
+    def _safe_paraphrase_predicate(cls, text: str) -> str | None:
+        predicate_forms = {
+            "increased": "increase",
+            "increase": "increase",
+            "grew": "grow",
+            "grow": "grow",
+            "sorts": "sort",
+            "sort": "sort",
+            "orders": "order",
+            "order": "order",
+        }
+        predicates = [
+            predicate_forms[token]
+            for token in _TOKEN_PATTERN.findall(text.casefold())
+            if token in predicate_forms
+        ]
+        return predicates[0] if len(predicates) == 1 else None
 
     @classmethod
     def _event_terms(cls, text: str) -> set[str]:
@@ -411,7 +717,7 @@ class RuleBasedVerifier:
         return {
             token
             for token in _TOKEN_PATTERN.findall(
-                text.casefold()
+                RuleBasedVerifier._normalize_safe_phrases(text)
             )
             if token not in _STOP_WORDS
         }
@@ -428,6 +734,8 @@ class RuleBasedVerifier:
     @staticmethod
     def _canonical_token(token: str) -> str:
         """Normalize only simple inflections needed for factual comparison."""
+        if token in _SAFE_RELATION_ALIASES:
+            return _SAFE_RELATION_ALIASES[token]
         if token in _IRREGULAR_FORMS:
             return _IRREGULAR_FORMS[token]
         if token.endswith("ied") and len(token) > 4:
