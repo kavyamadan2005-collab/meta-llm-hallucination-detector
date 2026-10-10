@@ -1,6 +1,6 @@
 """API request and response models for end-to-end analysis."""
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -23,3 +23,12 @@ class AnalyzeResponse(BaseModel):
     claims: list[Claim]
     graph: dict[str, Any]
     verification_results: list[VerificationResult]
+    overall_result: "OverallResult"
+
+
+class OverallResult(BaseModel):
+    """Aggregate outcome derived only from individual claim verdicts."""
+
+    status: Literal["VERIFIED", "HALLUCINATION_DETECTED", "INCONCLUSIVE"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    explanation: str = Field(min_length=1)

@@ -80,7 +80,7 @@ def create_analysis_components(settings: Settings | None = None) -> AnalysisComp
     ])
     verifier = VerificationService(
         retriever=retriever,
-        verifier=RuleBasedVerifier(min_similarity=max(configured.retrieval_min_similarity, 0.65)),
+        verifier=RuleBasedVerifier(min_similarity=configured.retrieval_min_similarity),
     )
     return AnalysisComponents(
         provider=create_llm_provider(configured),

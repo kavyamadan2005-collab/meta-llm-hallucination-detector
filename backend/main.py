@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from backend.core.config import get_settings
 from backend.core.logging import configure_logging
 from backend.api.analysis import AnalysisComponents, create_analysis_components
-from backend.api.schemas import AnalyzeRequest, AnalyzeResponse
+from backend.api.schemas import AnalyzeRequest, AnalyzeResponse, OverallResult
 from modules.graph import ClaimGraph
 from modules.llm import LLMProviderError
 
@@ -68,12 +68,40 @@ def analyze(
         graph = ClaimGraph()
         graph.add_claims(claims)
         verification_results = components.verifier.verify_claims(claims, components.retrieval_top_k)
+        contradicted = sum(
+            result.verdict.value == "CONTRADICTED"
+            for result in verification_results
+        )
+        insufficient = sum(
+            result.verdict.value == "INSUFFICIENT_EVIDENCE"
+            for result in verification_results
+        )
+        if contradicted:
+            overall_status = "HALLUCINATION_DETECTED"
+            overall_explanation = "One or more claims contradict the retrieved evidence."
+        elif insufficient or not verification_results:
+            overall_status = "INCONCLUSIVE"
+            overall_explanation = "One or more claims lack sufficient evidence for verification."
+        else:
+            overall_status = "VERIFIED"
+            overall_explanation = "All extracted claims are supported by the retrieved evidence."
+        overall_confidence = (
+            sum(result.confidence for result in verification_results)
+            / len(verification_results)
+            if verification_results
+            else 0.0
+        )
         return AnalyzeResponse(
             question=question,
             llm_response=llm_response,
             claims=claims,
             graph=graph.to_dict(),
             verification_results=verification_results,
+            overall_result=OverallResult(
+                status=overall_status,
+                confidence=overall_confidence,
+                explanation=overall_explanation,
+            ),
         )
     except LLMProviderError as exc:
         logger.warning("Analysis provider failure: %s", str(exc))

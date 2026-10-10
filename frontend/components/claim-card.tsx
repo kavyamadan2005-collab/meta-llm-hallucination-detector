@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const styles = {
   supported: { label: 'SUPPORTED', icon: CheckCircle2, text: 'text-supported', chip: 'border-supported/25 bg-supported/10 text-supported', rail: 'bg-supported' },
   contradicted: { label: 'CONTRADICTED', icon: TriangleAlert, text: 'text-contradicted', chip: 'border-contradicted/25 bg-contradicted/10 text-contradicted', rail: 'bg-contradicted' },
-  unsupported: { label: 'UNSUPPORTED', icon: CircleHelp, text: 'text-unsupported', chip: 'border-unsupported/25 bg-unsupported/10 text-unsupported', rail: 'bg-unsupported' },
+  insufficient: { label: 'INSUFFICIENT EVIDENCE', icon: CircleHelp, text: 'text-unsupported', chip: 'border-unsupported/25 bg-unsupported/10 text-unsupported', rail: 'bg-unsupported' },
 } as const
 
 function EvidenceList({ items, label }: { items: Evidence[]; label: string }) {
@@ -40,8 +40,8 @@ function EvidenceList({ items, label }: { items: Evidence[]; label: string }) {
   )
 }
 
-export function ClaimCard({ result, index }: { result: VerificationResult; index: number }) {
-  const [open, setOpen] = useState(false)
+export function ClaimCard({ result, index, defaultOpen = false }: { result: VerificationResult; index: number; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   const kind = verdictKey(result.verdict)
   const style = styles[kind]
   const Icon = style.icon
@@ -63,6 +63,20 @@ export function ClaimCard({ result, index }: { result: VerificationResult; index
             <span className="ml-auto text-sm font-semibold tabular-nums text-muted-foreground">{confidence}% confidence</span>
           </div>
           <p className="mt-4 text-base font-medium leading-relaxed">{result.claim_text}</p>
+          {(result.event_fact || result.attributes?.length) && (
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              {result.event_fact && (
+                <span className="rounded-md border border-border bg-muted px-2.5 py-1.5">
+                  Event fact: <strong>{result.event_fact.verdict}</strong>
+                </span>
+              )}
+              {result.attributes?.map((attribute, attributeIndex) => (
+                <span key={`${attribute.name}-${attributeIndex}`} className="rounded-md border border-border bg-muted px-2.5 py-1.5">
+                  {attribute.name}: <strong>{attribute.value}</strong> — <strong>{attribute.verdict}</strong>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
             <div className={cn('h-full rounded-full', style.rail)} style={{ width: `${confidence}%` }} />
           </div>

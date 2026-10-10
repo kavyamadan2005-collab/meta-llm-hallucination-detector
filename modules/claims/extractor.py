@@ -6,7 +6,7 @@ import re
 
 import spacy
 from spacy.language import Language
-from spacy.tokens import Span
+from spacy.tokens import Doc, Span
 
 from modules.claims.models import Claim
 
@@ -20,6 +20,29 @@ _FALLBACK_PATTERNS = (
     re.compile(r"\b[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+)+\b"),
     re.compile(r"\b(?=[A-Za-z0-9._/-]*[A-Za-z])(?=[A-Za-z0-9._/-]*\d)[A-Za-z][A-Za-z0-9._/-]*\b"),
     re.compile(r"\b[A-Z]{2,6}\b"),
+)
+_ROLE_ENTITY_PATTERN = re.compile(
+    r"\b(?:the\s+)?(?P<role>[A-Za-z]+(?:\s+[A-Za-z]+){0,3})\s+of\s+"
+    r"(?P<jurisdiction>[A-Za-z][A-Za-z\s-]*)\s+(?:is|was|has been|became|serves as|served as|"
+    r"assumed office as)\b",
+    re.IGNORECASE,
+)
+_DISCOURSE_PREFIXES = (
+    "as of my knowledge cutoff",
+    "according to available information",
+    "based on my knowledge",
+    "in my understanding",
+    "it is worth noting that",
+    "generally speaking",
+    "it is widely believed that",
+)
+_CONJUNCTIONS = (
+    "and",
+    "but",
+    "while",
+    "whereas",
+    "additionally",
+    "as well as",
 )
 
 
@@ -70,6 +93,14 @@ class ClaimExtractor:
             for entity in sentence.ents
         ]
         occupied = [(entity["start"], entity["end"]) for entity in entities]
+        for role_match in _ROLE_ENTITY_PATTERN.finditer(sentence.text):
+            role_text = role_match.group("role").strip()
+            start = sentence.start_char + role_match.start("role")
+            end = sentence.start_char + role_match.end("role")
+            if not role_text or any(start < occupied_end and end > occupied_start for occupied_start, occupied_end in occupied):
+                continue
+            entities.append({"text": role_text, "label": "ROLE", "start": start, "end": end})
+            occupied.append((start, end))
         for pattern in _FALLBACK_PATTERNS:
             for match in pattern.finditer(sentence.text):
                 start = sentence.start_char + match.start()

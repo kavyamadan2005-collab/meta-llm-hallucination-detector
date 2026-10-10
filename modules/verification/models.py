@@ -13,7 +13,8 @@ class Verdict(str, Enum):
 
     SUPPORTED = "SUPPORTED"
     CONTRADICTED = "CONTRADICTED"
-    UNSUPPORTED = "UNSUPPORTED"
+    INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
+    UNSUPPORTED = "INSUFFICIENT_EVIDENCE"
 
 
 class EvidenceDiagnostic(BaseModel):
@@ -31,6 +32,23 @@ class EvidenceDiagnostic(BaseModel):
     decision_reason: str
 
 
+class VerificationAssessment(BaseModel):
+    """Evidence-backed outcome for one fact within a larger claim."""
+
+    verdict: Verdict
+    confidence: float = Field(ge=0.0, le=1.0)
+    explanation: str = Field(min_length=1)
+    supporting_evidence: list[Evidence] = Field(default_factory=list)
+    contradicting_evidence: list[Evidence] = Field(default_factory=list)
+
+
+class AttributeVerification(VerificationAssessment):
+    """Outcome for a specific attribute, such as a calendar date."""
+
+    name: str
+    value: str
+
+
 class VerificationResult(BaseModel):
     """A deterministic, evidence-preserving claim verification result."""
 
@@ -43,3 +61,5 @@ class VerificationResult(BaseModel):
     supporting_evidence: list[Evidence] = Field(default_factory=list)
     contradicting_evidence: list[Evidence] = Field(default_factory=list)
     evidence_diagnostics: list[EvidenceDiagnostic] = Field(default_factory=list)
+    event_fact: VerificationAssessment | None = None
+    attributes: list[AttributeVerification] = Field(default_factory=list)

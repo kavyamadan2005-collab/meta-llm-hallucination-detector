@@ -1,7 +1,8 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || 'http://127.0.0.1:8000'
 
-export type Verdict = 'SUPPORTED' | 'CONTRADICTED' | 'UNSUPPORTED' | (string & {})
+export type Verdict = 'SUPPORTED' | 'CONTRADICTED' | 'INSUFFICIENT_EVIDENCE' | 'UNSUPPORTED' | (string & {})
+export type VerdictKey = 'supported' | 'contradicted' | 'insufficient'
 
 export interface AnalyzeRequest {
   question: string
@@ -36,6 +37,27 @@ export interface VerificationResult {
   evidence?: Evidence[] | null
   supporting_evidence?: Evidence[] | null
   contradicting_evidence?: Evidence[] | null
+  event_fact?: VerificationAssessment | null
+  attributes?: AttributeVerification[] | null
+}
+
+export interface VerificationAssessment {
+  verdict: Verdict
+  confidence: number
+  explanation?: string | null
+  supporting_evidence?: Evidence[] | null
+  contradicting_evidence?: Evidence[] | null
+}
+
+export interface AttributeVerification extends VerificationAssessment {
+  name: string
+  value: string
+}
+
+export interface OverallResult {
+  status: string
+  confidence: number
+  explanation: string
 }
 
 export interface LLMResponse {
@@ -51,6 +73,7 @@ export interface AnalyzeResponse {
   claims?: Claim[] | null
   graph?: Record<string, unknown> | null
   verification_results?: VerificationResult[] | null
+  overall_result?: OverallResult | null
 }
 
 export class ApiError extends Error {
@@ -114,6 +137,23 @@ function toEvidence(value: unknown): Evidence | null {
   }
 }
 
+function toVerificationAssessment(value: unknown): VerificationAssessment | null {
+  if (!isObject(value)) return null
+  const verdict = readString(value.verdict)
+  if (!verdict) return null
+  return {
+    verdict,
+    confidence: readNumber(value.confidence) ?? 0,
+    explanation: readString(value.explanation),
+    supporting_evidence: Array.isArray(value.supporting_evidence)
+      ? value.supporting_evidence.map(toEvidence).filter((item): item is Evidence => item !== null)
+      : [],
+    contradicting_evidence: Array.isArray(value.contradicting_evidence)
+      ? value.contradicting_evidence.map(toEvidence).filter((item): item is Evidence => item !== null)
+      : [],
+  }
+}
+
 function toVerificationResult(value: unknown): VerificationResult | null {
   if (!isObject(value)) return null
   const claimId = readString(value.claim_id)
@@ -130,6 +170,18 @@ function toVerificationResult(value: unknown): VerificationResult | null {
   const contradictingEvidence = Array.isArray(value.contradicting_evidence)
     ? value.contradicting_evidence.map(toEvidence).filter((item): item is Evidence => item !== null)
     : []
+  const eventFact = toVerificationAssessment(value.event_fact)
+  const attributes = Array.isArray(value.attributes)
+    ? value.attributes.flatMap((attribute): AttributeVerification[] => {
+        if (!isObject(attribute)) return []
+        const assessment = toVerificationAssessment(attribute)
+        const name = readString(attribute.name)
+        const attributeValue = readString(attribute.value)
+        return assessment && name && attributeValue
+          ? [{ ...assessment, name, value: attributeValue }]
+          : []
+      })
+    : []
 
   return {
     claim_id: claimId,
@@ -140,6 +192,8 @@ function toVerificationResult(value: unknown): VerificationResult | null {
     evidence,
     supporting_evidence: supportingEvidence,
     contradicting_evidence: contradictingEvidence,
+    event_fact: eventFact,
+    attributes,
   }
 }
 
@@ -164,6 +218,13 @@ function normalizeAnalyzeResponse(payload: unknown): AnalyzeResponse {
         .map(toVerificationResult)
         .filter((item): item is VerificationResult => item !== null)
     : []
+  const overall = isObject(payload.overall_result)
+    ? {
+        status: readString(payload.overall_result.status) || 'INCONCLUSIVE',
+        confidence: readNumber(payload.overall_result.confidence) ?? 0,
+        explanation: readString(payload.overall_result.explanation) || '',
+      }
+    : null
 
   return {
     question,
@@ -176,6 +237,7 @@ function normalizeAnalyzeResponse(payload: unknown): AnalyzeResponse {
     claims,
     graph: isObject(payload.graph) ? payload.graph : null,
     verification_results: verificationResults,
+    overall_result: overall,
   }
 }
 
@@ -237,15 +299,15 @@ export async function analyzeQuestion(
   return normalizeAnalyzeResponse(payload)
 }
 
-export function verdictKey(verdict: Verdict): 'supported' | 'contradicted' | 'unsupported' {
+export function verdictKey(verdict: Verdict): VerdictKey {
   const v = String(verdict || '').toUpperCase()
   if (v.includes('SUPPORT') && !v.includes('UN') && !v.includes('NOT')) return 'supported'
   if (v.includes('CONTRADICT') || v.includes('REFUT')) return 'contradicted'
-  return 'unsupported'
+  return 'insufficient'
 }
 
 export function summarize(results: VerificationResult[]) {
-  const counts = { supported: 0, contradicted: 0, unsupported: 0 }
+  const counts = { supported: 0, contradicted: 0, insufficient: 0 }
   for (const r of results) counts[verdictKey(r.verdict)] += 1
   const total = results.length
   const avgConfidence = total
