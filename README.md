@@ -1,6 +1,11 @@
 # Meta-LLM Hallucination Detection Using Claim Graph Decomposition
 
-This repository currently contains the deployable project foundation. LLM generation, claim extraction, claim graphs, retrieval, verification, and scoring will be added in later stages.
+The project accepts a question, generates an answer, extracts factual claims,
+retrieves evidence, and verifies each claim with an evidence-preserving
+deterministic verifier. The API returns per-claim `SUPPORTED`, `CONTRADICTED`,
+or `UNSUPPORTED` results, plus an aggregate `overall_result`. `UNSUPPORTED`
+means that the available evidence is insufficient; the verifier never treats
+retrieval alone as proof.
 
 ## Setup
 
@@ -17,7 +22,7 @@ Edit `.env` only when local configuration needs to change. `DATABASE_PATH` is re
 ## Run the API
 
 ```powershell
-python -m uvicorn backend.main:app --reload
+.\.venv\Scripts\python.exe -m uvicorn backend.main:app --reload
 ```
 
 The API is available at `http://127.0.0.1:8000`. Check `http://127.0.0.1:8000/health` for service status.
@@ -35,7 +40,17 @@ The Next.js frontend is available at `http://localhost:3000`.
 ## Test and validate imports
 
 ```powershell
-python -m compileall backend frontend modules database utils tests
-python -c "from backend.main import app; print(app.title)"
-pytest
+.\.venv\Scripts\python.exe -m compileall backend frontend modules database utils tests
+.\.venv\Scripts\python.exe -c "from backend.main import app; print(app.title)"
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+The frontend can be built from its directory with `npm.cmd run build`.
+
+Example request:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/analyze `
+  -ContentType "application/json" `
+  -Body '{"question":"When did Chandrayaan-3 land on the Moon?"}'
 ```

@@ -1,6 +1,7 @@
 """Evidence retrieval and local knowledge-base indexing."""
 
 from modules.retrieval.external import ExternalRetrieverError, WikipediaRetriever
+from modules.retrieval.curated import CuratedFactRetriever
 from modules.retrieval.hybrid import HybridRetriever
 from modules.retrieval.local import LocalFaissRetriever
 from modules.retrieval.models import DocumentChunk, Evidence
@@ -18,6 +19,7 @@ __all__ = [
 	"DocumentChunk",
 	"Evidence",
 	"ExternalRetrieverError",
+	"CuratedFactRetriever",
 	"HybridRetriever",
 	"LocalFaissRetriever",
 	"MultiSourceRetriever",

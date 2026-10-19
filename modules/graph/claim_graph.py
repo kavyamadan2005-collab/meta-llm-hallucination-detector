@@ -9,6 +9,7 @@ from typing import Any, Iterable
 import networkx as nx
 
 from modules.claims.models import Claim
+from modules.verification.models import VerificationResult
 
 
 class ClaimGraph:
@@ -55,6 +56,18 @@ class ClaimGraph:
     def add_claim(self, claim: Claim) -> None:
         """Add claim entities and only relationships supported by simple patterns."""
         self._claims[claim.claim_id] = claim.claim_text
+        relation_entities = self._relation_entities(claim.claim_text)
+        if relation_entities:
+            source_text, target_text, relationship_type = relation_entities
+            source = self.add_entity(source_text, "DOMAIN_ENTITY", claim.claim_id)
+            target = self.add_entity(target_text, "DOMAIN_ENTITY", claim.claim_id)
+            self.add_relationship(
+                source,
+                target,
+                relationship_type,
+                claim.claim_id,
+            )
+            return
         entities = [
             self.add_entity(entity.text, entity.label, claim.claim_id)
             for entity in claim.entities
@@ -83,9 +96,144 @@ class ClaimGraph:
             else:
                 self.add_relationship(entities[0], entities[1], "launched_in", claim.claim_id)
         elif len(entities) == 2:
-            verb_match = re.search(r"\b(is|was|are|were|has|have|built|launched|created|founded)\b", sentence, re.I)
+            verb_match = re.search(
+                r"\b(is|was|are|were|has|have|built|launched|created|founded|"
+                r"orbits?|revolves?\s+around|depends?\s+on|located\s+in|"
+                r"capital\s+of|wrote|developed)\b",
+                sentence,
+                re.I,
+            )
             if verb_match:
-                self.add_relationship(entities[0], entities[1], verb_match.group(1).lower(), claim.claim_id)
+                relationship = re.sub(r"\s+", "_", verb_match.group(1).lower())
+                self.add_relationship(
+                    entities[0],
+                    entities[1],
+                    relationship,
+                    claim.claim_id,
+                )
+
+    @staticmethod
+    def _relation_entities(
+        sentence: str,
+    ) -> tuple[str, str, str] | None:
+        """Extract only explicit, capitalized subject-predicate-object wording."""
+        capital_match = re.search(
+            r"\b(?P<source>[A-Z][A-Za-z0-9-]*)\s+is\s+"
+            r"(?:not\s+)?(?:the\s+)?capital(?:\s+city)?\s+of\s+"
+            r"(?:the\s+)?(?P<target>[A-Z][A-Za-z0-9-]*)\b",
+            sentence,
+        )
+        if capital_match:
+            return (
+                capital_match.group("source"),
+                capital_match.group("target"),
+                "capital_of",
+            )
+
+        reverse_capital_match = re.search(
+            r"\b(?:the\s+)?capital(?:\s+city)?\s+of\s+"
+            r"(?:the\s+)?(?P<target>[A-Z][A-Za-z0-9-]*)\s+is\s+"
+            r"(?:the\s+)?(?P<source>[A-Z][A-Za-z0-9-]*)\b",
+            sentence,
+        )
+        if reverse_capital_match:
+            return (
+                reverse_capital_match.group("source"),
+                reverse_capital_match.group("target"),
+                "capital_of",
+            )
+
+        settled_match = re.search(
+            r"\b(?P<target>[A-Z][A-Za-z0-9-]*)\s+is\s+mentioned\s+"
+            r"as\s+a\s+place\s+where\s+(?:some\s+)?"
+            r"(?P<source>[A-Z][A-Za-z0-9-]*)s?\s+have\s+settled\b",
+            sentence,
+        )
+        if settled_match:
+            return (
+                settled_match.group("source"),
+                settled_match.group("target"),
+                "settled_in",
+            )
+
+        match = re.search(
+            r"\b(?P<source>(?:the\s+)?[A-Z][A-Za-z0-9-]*)\s+"
+            r"(?P<predicate>orbits?|revolves?\s+around|depends?\s+on|"
+            r"located\s+in|wrote|developed)\s+"
+            r"(?:the\s+)?(?P<target>[A-Z][A-Za-z0-9-]*)\b",
+            sentence,
+        )
+        if match:
+            source = re.sub(r"^the\s+", "", match.group("source"), flags=re.I)
+            return (
+                source,
+                match.group("target"),
+                re.sub(r"\s+", "_", match.group("predicate").casefold()),
+            )
+
+        generic_match = re.search(
+            r"\b(?P<source>(?:the\s+)?[A-Z][A-Za-z0-9-]*)\s+"
+            r"(?P<predicate>is|was|are|were|has|have)\s+"
+            r"(?:the\s+)?(?P<target>[A-Z][A-Za-z0-9-]*)\b",
+            sentence,
+        )
+        if not generic_match:
+            return None
+        source = re.sub(r"^the\s+", "", generic_match.group("source"), flags=re.I)
+        target = generic_match.group("target")
+        predicate = re.sub(
+            r"\s+",
+            "_",
+            generic_match.group("predicate").casefold(),
+        )
+        return source, target, predicate
+
+    def annotate_verification(
+        self,
+        results: Iterable[VerificationResult],
+    ) -> None:
+        """Attach claim verdicts and evidence provenance to relationship edges."""
+        by_claim = {result.claim_id: result for result in results}
+        for source, target, attributes in self.graph.edges(data=True):
+            claim_ids = attributes.get("claim_ids", [])
+            claim_results = [
+                by_claim[claim_id]
+                for claim_id in claim_ids
+                if claim_id in by_claim
+            ]
+            if not claim_results:
+                continue
+
+            if any(result.verdict.value == "CONTRADICTED" for result in claim_results):
+                status = "CONTRADICTED"
+            elif any(
+                result.verdict.value == "INSUFFICIENT_EVIDENCE"
+                for result in claim_results
+            ):
+                status = "INSUFFICIENT_EVIDENCE"
+            else:
+                status = "SUPPORTED"
+
+            evidence = []
+            for result in claim_results:
+                for item in [
+                    *result.supporting_evidence,
+                    *result.contradicting_evidence,
+                ]:
+                    serialized = item.model_dump(mode="json")
+                    if serialized not in evidence:
+                        evidence.append(serialized)
+
+            attributes["verification_status"] = status
+            attributes["claim_texts"] = [
+                self._claims[claim_id]
+                for claim_id in claim_ids
+                if claim_id in self._claims
+            ]
+            attributes["evidence"] = evidence
+            attributes["confidence"] = max(
+                result.confidence for result in claim_results
+            )
 
     def to_dict(self) -> dict[str, Any]:
         """Return JSON-compatible graph data, including claim text provenance."""
@@ -95,8 +243,14 @@ class ClaimGraph:
                 for node_id, attributes in self.graph.nodes(data=True)
             ],
             "edges": [
-                {"source": source, "target": target, **dict(attributes)}
-                for source, target, attributes in self.graph.edges(data=True)
+                {
+                    "id": f"relationship-{index + 1}",
+                    "source": source,
+                    "target": target,
+                    **dict(attributes),
+                }
+                for index, (source, target, attributes)
+                in enumerate(self.graph.edges(data=True))
             ],
             "claims": [
                 {"claim_id": claim_id, "claim_text": text}

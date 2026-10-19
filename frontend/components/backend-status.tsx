@@ -11,10 +11,9 @@ export function BackendStatus({ className }: { className?: string }) {
 
   useEffect(() => {
     let active = true
-    const controller = new AbortController()
 
     const run = async () => {
-      const ok = await checkHealth(controller.signal)
+      const ok = await checkHealth()
       if (active) setStatus(ok ? 'online' : 'offline')
     }
 
@@ -23,7 +22,6 @@ export function BackendStatus({ className }: { className?: string }) {
     return () => {
       active = false
       clearInterval(interval)
-      controller.abort()
     }
   }, [])
 

@@ -61,6 +61,58 @@ def test_claim_extraction_preserves_sentences_and_entities() -> None:
     ]
 
 
+def test_claim_extraction_splits_independent_contrastive_facts() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract(
+        "Karnataka is a state in southern India, but "
+        "New Delhi has been the capital since 1911."
+    )
+
+    assert [claim.claim_text for claim in claims] == [
+        "Karnataka is a state in southern India.",
+        "New Delhi has been the capital since 1911.",
+    ]
+    assert all(claim.original_sentence == (
+        "Karnataka is a state in southern India, but "
+        "New Delhi has been the capital since 1911."
+    ) for claim in claims)
+
+
+def test_claim_extraction_keeps_conjoined_objects_together() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract(
+        "The main causes of ocean tides are the gravitational pull of the "
+        "sun and the moon on Earth's oceans."
+    )
+
+    assert [claim.claim_text for claim in claims] == [
+        "The main causes of ocean tides are the gravitational pull of the "
+        "sun and the moon on Earth's oceans."
+    ]
+
+
+def test_claim_extraction_removes_numbered_list_artifacts() -> None:
+    nlp = spacy.blank("en")
+    nlp.add_pipe("sentencizer")
+
+    claims = ClaimExtractor(nlp=nlp).extract(
+        "The key principles of a circular economy are:\n"
+        "1. Eliminate waste and pollution.\n"
+        "2. Circulate products and materials at their highest value.\n"
+        "3. Regenerate natural systems."
+    )
+
+    assert [claim.claim_text for claim in claims] == [
+        "Eliminate waste and pollution.",
+        "Circulate products and materials at their highest value.",
+        "Regenerate natural systems.",
+    ]
+
+
 def test_claim_extraction_fallback_does_not_duplicate_spacy_entity() -> None:
     nlp = spacy.blank("en")
     nlp.add_pipe("sentencizer")
@@ -167,3 +219,30 @@ def test_claim_graph_deduplicates_entities_and_serializes(tmp_path: Path) -> Non
     assert all(edge["claim_ids"] == ["C1", "C2"] for edge in data["edges"])
     graph.export_graphml(tmp_path / "claims.graphml")
     assert (tmp_path / "claims.graphml").exists()
+
+
+def test_claim_graph_extracts_directional_capital_and_settlement_relationships() -> None:
+    claims = ClaimExtractor().extract(
+        "No, Bengaluru is not the capital of Manipur. "
+        "Imphal is the capital of Manipur. "
+        "Bengaluru is mentioned as a place where some Manipuris have settled."
+    )
+    graph = ClaimGraph()
+    graph.add_claims(claims)
+
+    data = graph.to_dict()
+    node_text_by_id = {node["id"]: node["text"] for node in data["nodes"]}
+    relationships = {
+        (
+            node_text_by_id[data["source"]],
+            data["relationship_type"],
+            node_text_by_id[data["target"]],
+        )
+        for data in data["edges"]
+    }
+
+    assert relationships == {
+        ("Bengaluru", "capital_of", "Manipur"),
+        ("Imphal", "capital_of", "Manipur"),
+        ("Manipuris", "settled_in", "Bengaluru"),
+    }

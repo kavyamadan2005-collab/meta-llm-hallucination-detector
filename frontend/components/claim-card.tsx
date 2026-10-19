@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 const styles = {
   supported: { label: 'SUPPORTED', icon: CheckCircle2, text: 'text-supported', chip: 'border-supported/25 bg-supported/10 text-supported', rail: 'bg-supported' },
   contradicted: { label: 'CONTRADICTED', icon: TriangleAlert, text: 'text-contradicted', chip: 'border-contradicted/25 bg-contradicted/10 text-contradicted', rail: 'bg-contradicted' },
-  unsupported: { label: 'UNSUPPORTED', icon: CircleHelp, text: 'text-unsupported', chip: 'border-unsupported/25 bg-unsupported/10 text-unsupported', rail: 'bg-unsupported' },
+  insufficient: { label: 'INSUFFICIENT EVIDENCE', icon: CircleHelp, text: 'text-unsupported', chip: 'border-unsupported/25 bg-unsupported/10 text-unsupported', rail: 'bg-unsupported' },
 } as const
 
 function EvidenceList({ items, label }: { items: Evidence[]; label: string }) {
@@ -40,14 +40,16 @@ function EvidenceList({ items, label }: { items: Evidence[]; label: string }) {
   )
 }
 
-export function ClaimCard({ result, index }: { result: VerificationResult; index: number }) {
-  const [open, setOpen] = useState(false)
+export function ClaimCard({ result, index, defaultOpen = false }: { result: VerificationResult; index: number; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   const kind = verdictKey(result.verdict)
   const style = styles[kind]
   const Icon = style.icon
   const evidence = Array.isArray(result.evidence) ? result.evidence : []
   const supporting = Array.isArray(result.supporting_evidence) ? result.supporting_evidence : []
   const contradicting = Array.isArray(result.contradicting_evidence) ? result.contradicting_evidence : []
+  const verdictEvidence = [...supporting, ...contradicting]
+  const displayedEvidence = verdictEvidence.length ? verdictEvidence : evidence
   const confidence = Math.round((Number(result.confidence) || 0) * 100)
 
   return (
@@ -63,13 +65,27 @@ export function ClaimCard({ result, index }: { result: VerificationResult; index
             <span className="ml-auto text-sm font-semibold tabular-nums text-muted-foreground">{confidence}% confidence</span>
           </div>
           <p className="mt-4 text-base font-medium leading-relaxed">{result.claim_text}</p>
+          {(result.event_fact || result.attributes?.length) && (
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              {result.event_fact && (
+                <span className="rounded-md border border-border bg-muted px-2.5 py-1.5">
+                  Event fact: <strong>{result.event_fact.verdict}</strong>
+                </span>
+              )}
+              {result.attributes?.map((attribute, attributeIndex) => (
+                <span key={`${attribute.name}-${attributeIndex}`} className="rounded-md border border-border bg-muted px-2.5 py-1.5">
+                  {attribute.name}: <strong>{attribute.value}</strong> — <strong>{attribute.verdict}</strong>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
             <div className={cn('h-full rounded-full', style.rail)} style={{ width: `${confidence}%` }} />
           </div>
           {result.explanation && <p className="mt-4 border-l-2 border-primary/30 pl-4 text-sm leading-relaxed text-muted-foreground">{result.explanation}</p>}
           <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80">
             <ChevronDown className={cn('size-4 transition-transform', open && 'rotate-180')} />
-            {evidence.length ? `${evidence.length} evidence ${evidence.length === 1 ? 'source' : 'sources'}` : 'No evidence returned'}
+            {displayedEvidence.length ? `${displayedEvidence.length} evidence ${displayedEvidence.length === 1 ? 'source' : 'sources'}` : 'No evidence returned'}
           </button>
           {open && (
             <div>

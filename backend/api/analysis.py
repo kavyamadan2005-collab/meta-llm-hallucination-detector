@@ -10,6 +10,7 @@ from modules.claims import ClaimExtractor
 from modules.graph import ClaimGraph
 from modules.llm import LLMProvider, create_llm_provider
 from modules.retrieval import (
+    CuratedFactRetriever,
     DevelopmentWebSearchProvider,
     LocalFaissRetriever,
     MultiSourceRetriever,
@@ -44,6 +45,7 @@ def create_analysis_components(settings: Settings | None = None) -> AnalysisComp
         min_similarity=configured.retrieval_min_similarity,
     )
     sources: dict[str, Retriever] = {
+        "curated": CuratedFactRetriever(),
         "local": local_retriever,
         "wikipedia": WikipediaRetriever(
             api_url=configured.wikipedia_api_url,
@@ -80,7 +82,7 @@ def create_analysis_components(settings: Settings | None = None) -> AnalysisComp
     ])
     verifier = VerificationService(
         retriever=retriever,
-        verifier=RuleBasedVerifier(min_similarity=max(configured.retrieval_min_similarity, 0.65)),
+        verifier=RuleBasedVerifier(min_similarity=configured.retrieval_min_similarity),
     )
     return AnalysisComponents(
         provider=create_llm_provider(configured),

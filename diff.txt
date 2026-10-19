@@ -1,0 +1,193 @@
+﻿diff --git a/modules/verification/verifier.py b/modules/verification/verifier.py
+index 71f347d..1119302 100644
+--- a/modules/verification/verifier.py
++++ b/modules/verification/verifier.py
+@@ -382,6 +382,11 @@ class RuleBasedVerifier:
+         evidence_numbers = set(
+             re.findall(r"\b\d{4}\b", evidence_text)
+         )
++        evidence_numbers -= {
++            date[2]
++            for date, _, is_metadata in self._explicit_date_candidates(evidence_text)
++            if is_metadata and date[2] is not None
++        }
+ 
+         if (
+             claim_numbers
+@@ -605,8 +610,12 @@ class RuleBasedVerifier:
+     def _has_conflicting_explicit_date(self, claim: Claim, evidence_text: str) -> bool:
+         """Detect different dates for the same explicitly shared event."""
+         claim_date = self._explicit_date(claim.claim_text)
+-        evidence_date = self._explicit_date(evidence_text)
+-        if claim_date is None or evidence_date is None or claim_date == evidence_date:
++        evidence_dates = [
++            date
++            for date, _, is_metadata in self._explicit_date_candidates(evidence_text)
++            if not is_metadata
++        ]
++        if claim_date is None or not evidence_dates:
+             return False
+ 
+         evidence_tokens = self._comparison_tokens(evidence_text)
+@@ -618,17 +627,21 @@ class RuleBasedVerifier:
+             and self._comparison_tokens(entity.text).issubset(evidence_tokens)
+         ]
+         claim_event_terms = self._event_terms(claim.claim_text)
+-        evidence_event_terms = self._event_terms(evidence_text)
+-        if shared_entities and claim_event_terms & evidence_event_terms:
+-            return True
+-
+         claim_context = self._date_free_context(claim.claim_text)
+-        evidence_context = self._date_free_context(evidence_text)
+-        shared_context = claim_context & evidence_context
+-        return (
+-            len(shared_context) >= 2
+-            and len(shared_context) / max(1, len(claim_context)) >= 0.5
+-        )
++        for evidence_date, local_context, is_metadata in self._explicit_date_candidates(evidence_text):
++            if is_metadata or evidence_date == claim_date:
++                continue
++            evidence_event_terms = self._event_terms(local_context)
++            if shared_entities and claim_event_terms & evidence_event_terms:
++                return True
++            evidence_context = self._date_free_context(local_context)
++            shared_context = claim_context & evidence_context
++            if (
++                len(shared_context) >= 2
++                and len(shared_context) / max(1, len(claim_context)) >= 0.5
++            ):
++                return True
++        return False
+ 
+     @staticmethod
+     def _explicit_date(text: str) -> tuple[str, str, str | None] | None:
+@@ -649,6 +662,42 @@ class RuleBasedVerifier:
+             year_match.group(1) if year_match else None,
+         )
+ 
++    @classmethod
++    def _explicit_date_candidates(
++        cls,
++        text: str,
++    ) -> list[tuple[tuple[str, str, str | None], str, bool]]:
++        """Return dates with local context and metadata classification."""
++        normalized = text.casefold()
++        pattern = re.compile(
++            rf"\b({'|'.join(_MONTHS)})\s+(\d{{1,2}})(?:,?\s+(\d{{4}}))?\b"
++        )
++        candidates: list[tuple[tuple[str, str, str | None], str, bool]] = []
++        for match in pattern.finditer(normalized):
++            context = normalized[max(0, match.start() - 120):min(len(normalized), match.end() + 120)]
++            candidates.append(
++                (
++                    (match.group(1), match.group(2), match.group(3)),
++                    context,
++                    cls._is_metadata_date(normalized, match.start(), match.end()),
++                )
++            )
++        return candidates
++
++    @staticmethod
++    def _is_metadata_date(text: str, start: int, end: int) -> bool:
++        """Identify dates used as publication, update, or post metadata."""
++        preceding = text[max(0, start - 80):start]
++        following = text[end:min(len(text), end + 30)]
++        return bool(
++            re.search(
++                r"(?:published|publication|last\s+updated|updated|posted)"
++                r"\s*:?\s*$",
++                preceding,
++            )
++            or re.match(r"\s*[┬╖ΓÇó|]\s*", following)
++        )
++
+     @classmethod
+     def _date_free_context(cls, text: str) -> set[str]:
+         """Return factual context with complete calendar-date tokens removed."""
+diff --git a/tests/test_verification.py b/tests/test_verification.py
+index 2d990c4..07c2d4c 100644
+--- a/tests/test_verification.py
++++ b/tests/test_verification.py
+@@ -39,6 +39,82 @@ def test_explicit_negation_against_positive_evidence_is_contradicted() -> None:
+     assert result.confidence > 0.65
+ 
+ 
++def test_metadata_date_before_matching_event_is_not_contradicted() -> None:
++    result = RuleBasedVerifier().verify(
++        claim("India became independent on August 15, 1947."),
++        [
++            evidence(
++                "August 15, 2025 ┬╖ On August 15, 1947, India became free "
++                "after two centuries of British rule."
++            )
++        ],
++    )
++
++    assert result.verdict != Verdict.CONTRADICTED
++
++
++def test_publication_date_before_matching_event_is_not_contradicted() -> None:
++    result = RuleBasedVerifier().verify(
++        claim("India became independent on August 15, 1947."),
++        [
++            evidence(
++                "Published: February 09, 2010.\n"
++                "India became independent on August 15, 1947."
++            )
++        ],
++    )
++
++    assert result.verdict != Verdict.CONTRADICTED
++
++
++def test_last_updated_date_before_matching_event_is_not_contradicted() -> None:
++    result = RuleBasedVerifier().verify(
++        claim("India became independent on August 15, 1947."),
++        [
++            evidence(
++                "Last Updated: August 14, 2026.\n"
++                "India became independent on August 15, 1947."
++            )
++        ],
++    )
++
++    assert result.verdict != Verdict.CONTRADICTED
++
++
++def test_conflicting_event_date_with_metadata_is_contradicted() -> None:
++    claim_text = "India became independent on August 15, 1947."
++    assert RuleBasedVerifier().verify(
++        claim(claim_text),
++        [
++            evidence(
++                "India became independent on August 16, 1947. Published: January 2020."
++            )
++        ],
++    ).verdict == Verdict.CONTRADICTED
++    assert RuleBasedVerifier().verify(
++        claim(claim_text),
++        [
++            evidence(
++                "Published: January 2020. India became independent on August 16, 1947."
++            )
++        ],
++    ).verdict == Verdict.CONTRADICTED
++
++
++def test_matching_event_date_with_metadata_is_not_contradicted() -> None:
++    result = RuleBasedVerifier().verify(
++        claim("The launch occurred on March 5, 2022."),
++        [
++            evidence(
++                "Published: March 6, 2024.\n"
++                "The launch occurred on March 5, 2022."
++            )
++        ],
++    )
++
++    assert result.verdict != Verdict.CONTRADICTED
++
++
+ def test_positive_claim_is_supported_by_matching_inflected_evidence() -> None:
+     result = RuleBasedVerifier().verify(
+         claim("India won the match."),

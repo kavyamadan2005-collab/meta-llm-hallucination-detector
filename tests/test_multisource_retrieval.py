@@ -145,4 +145,9 @@ def test_retrieval_source_configuration_is_loaded() -> None:
 def test_openalex_is_opt_in_for_default_retrieval_sources() -> None:
     settings = Settings()
 
-    assert settings.retrieval_enabled_sources == ["local", "wikipedia", "web_search"]
+    assert settings.retrieval_enabled_sources == [
+        "curated",
+        "local",
+        "wikipedia",
+        "web_search",
+    ]
